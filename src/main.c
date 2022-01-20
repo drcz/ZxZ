@@ -20,7 +20,7 @@ void update_joystick() {
 
 //// SPRITES AND STUFF ////////////////////////////////////////////////////////////
 
-enum { RS_EMPTY,
+enum { RS_EMPTY, /// SURE?!
        RS_DIRT, RS_WALL,
        RS_BARELL,
        RS_PARTICLE_UDLR,
@@ -28,184 +28,210 @@ enum { RS_EMPTY,
        RS_GUN_UDLR,
        RS_BOMB,
        RS_DETONATOR_0,RS_DETONATOR_1,
-       RS_LEVER_LR,       
+       RS_LEVER_L, RS_LEVER_R,       
        RS_ACTOR_U,RS_ACTOR_D,RS_ACTOR_LR,
        RS_ACTOR_U23,RS_ACTOR_D23,RS_ACTOR_LR2,RS_ACTOR_LR3,
        RAW_SPRITES_COUNT };
 
-const uint8_t raw_sprites[RAW_SPRITES_COUNT][8] = {
+const uint8_t raw_sprites[RAW_SPRITES_COUNT][16] = {
     { /// RS_EMPTY
-        0,0,0,0,0,0,0,0
+      0b00000000,0b01000000,
+      0b00000000,0b00000000,
+      0b00000100,0b00000100,
+      0b00000000,0b00000000,
+      0b01000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000100,0b00000001,
+      0b00000000,0b00000000
+      /*
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000
+      */
     },
     { /// RS_DIRT
-        0b00001000,
-        0b01000000,
-        0b00100010,
-        0b00000000,
-        0b10001000,
-        0b00000000,
-        0b00100010,
-        0b00000000
+      0b00000000,0b00000101,
+      0b00000100,0b00000101,
+      0b00000100,0b00000000,
+      0b00000000,0b00000100,
+      0b00000001,0b01010100,
+      0b00010000,0b01100100,
+      0b00000000,0b01000000,
     },
-    {  /// RS_WALL
-        0b01111110,
-        0b10000001,
-        0b10100001,
-        0b10000101,
-        0b10000101,
-        0b10001101,
-        0b10000001,
-        0b01111110
+    { /// RS_WALL
+      0b10101010,0b10101001,
+      0b10101010,0b10100101,
+      0b10100101,0b01100101,
+      0b10100111,0b11100101,
+      0b10100111,0b11100101,
+      0b10101010,0b10100101,
+      0b10010101,0b01010101,
+      0b01010101,0b01010101
     },
     { /// RS_BARELL
-        0b00000000,
-        0b11111111,
-        0b01010110,
-        0b01001110,
-        0b10010111,
-        0b01001110,
-        0b01010110,
-        0b11111111
+      0b00000000,0b00000000,
+      0b01010101,0b01010101,
+      0b00011011,0b10100100,
+      0b00011011,0b10100100,
+      0b01010110,0b01010101,
+      0b00011011,0b10100100,
+      0b00011011,0b10100100,
+      0b01010101,0b01010101
     },
     { /// RS_PARTICLE_UDLR
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b10001011,
-        0b00101011,
-        0b00000000,
-        0b00000000,
-        0b00000000
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000100,0b10001111,
+      0b00010000,0b10001111,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b00000000,0b00000000
     },
     { /// RS_EXPLOSION12
-        0b01001010,
-        0b11101111,
-        0b01111110,
-        0b11111100,
-        0b01111111,
-        0b00111100,
-        0b01111111,
-        0b10011000
+      0b00100010,0b10001010,
+      0b00001011,0b10101100,
+      0b10101111,0b11111010,
+      0b00111111,0b11111110,
+      0b10101111,0b11111110,
+      0b10111111,0b11111011,
+      0b00101011,0b10111100,
+      0b00001000,0b10000010
     },
     { /// RS_GUN_UDLR
-        0b10000000,
-        0b11000000,
-        0b10111010,
-        0b10001000,
-        0b10101000,
-        0b11111010,
-        0b11000000,
-        0b10000000
+      0b01000000,0b00000000,
+      0b01110000,0b00000000,
+      0b01111001,0b00100000,
+      0b01101001,0b11000000,
+      0b01101001,0b11000000,
+      0b01011001,0b00100000,
+      0b01010000,0b00000000,
+      0b01000000,0b00000000
     },
     { /// RS_BOMB
-        0b00101010,
-        0b01010100,
-        0b01111110,
-        0b10100101,
-        0b11111111,
-        0b10101101,
-        0b10100101,
-        0b01111110
+      0b00010000,0b01000100,
+      0b00011010,0b01101000,
+      0b10010101,0b01011001,
+      0b10010111,0b11011001,
+      0b01010111,0b11010101,
+      0b10010101,0b01011001,
+      0b10010110,0b01011001,
+      0b00011010,0b01101000
     },
     { /// RS_DETONATOR_0
-        0b00000000,
-        0b11111111,
-        0b00011000,
-        0b00011000,
-        0b00011000,
-        0b01111110,
-        0b01000010,
-        0b01111110
+      0b01010101,0b01010101,
+      0b00000010,0b01000000,
+      0b00000010,0b01000000,
+      0b00000010,0b01000000,
+      0b00000101,0b01010000,
+      0b00011110,0b10010100,
+      0b00011110,0b10010100,
+      0b00011110,0b10010100
     },
     { /// RS_DETONATOR_1
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b11111111,
-        0b00011000,
-        0b01111110,
-        0b01000010,
-        0b01111110
+      0b00000000,0b00000000,
+      0b00000000,0b00000000,
+      0b01010101,0b01010101,
+      0b00000010,0b01000000,
+      0b00000101,0b01010000,
+      0b00011110,0b10010100,
+      0b00011110,0b10010100,
+      0b00011110,0b10010100
     },
-    { /// RS_LEVER_LR
-        0b01100000,
-        0b11110000,
-        0b10110000,
-        0b11110000,
-        0b01100000,
-        0b01100000,
-        0b01100000,
-        0b11111111
+    { /// RS_LEVER_L
+      0b00000000,0b00000000,
+      0b11100000,0b00000000,
+      0b10010000,0b00000000,
+      0b00100100,0b00000000,
+      0b00001001,0b00000000,
+      0b00000010,0b01000000,
+      0b00010101,0b01010100,
+      0b01101110,0b10100101
+    },
+    { /// RS_LEVER_R
+      0b00000000,0b00000000,
+      0b00000000,0b00001110,
+      0b00000000,0b00001001,
+      0b00000000,0b00100100,
+      0b00000000,0b10010000,
+      0b00000010,0b01000000,
+      0b00010101,0b01010100,
+      0b01101110,0b10100101
     },
     { /// RS_ACTOR_U
-        0b01111110,
-        0b10000001,
-        0b10000001,
-        0b01011010,
-        0b00111100,
-        0b00111100,
-        0b00111100,
-        0b00100100
+      0b00000101,0b01010000,
+      0b00001010,0b10100000,
+      0b00011010,0b10100100,
+      0b00011010,0b10100100,
+      0b00010101,0b01010100,
+      0b00010101,0b01010100,
+      0b00000100,0b00010000,
+      0b00000100,0b00010000
     },
     { /// RS_ACTOR_D
-        0b01111110,
-        0b10000001,
-        0b10100101,
-        0b01000010,
-        0b00111100,
-        0b00111100,
-        0b00111100,
-        0b00100100
+      0b00000101,0b01010000,
+      0b00000111,0b11010000,
+      0b00010111,0b11010100,
+      0b00010101,0b01010100,
+      0b00100110,0b10011000,
+      0b00100101,0b01011000,
+      0b00000100,0b00010000,
+      0b00000100,0b00010000
     },
     { /// RS_ACTOR_LR
-        0b00111100,
-        0b01000010,
-        0b01010010,
-        0b01000010,
-        0b00111100,
-        0b00011000,
-        0b00011000,
-        0b00011000
+      0b00000001,0b01010000,
+      0b00001001,0b01110000,
+      0b00001001,0b01110000,
+      0b00001001,0b10010000,
+      0b00000001,0b10010000,
+      0b00000001,0b10010000,
+      0b00000001,0b01000000,
+      0b00000001,0b01000000
     },
     { /// RS_ACTOR_U23
-        0b01111110,
-        0b10000001,
-        0b10000001,
-        0b01011010,
-        0b00111100,
-        0b00111100,
-        0b00111100,
-        0b00000100
+      0b00000101,0b01010000,
+      0b00001010,0b10100000,
+      0b00011010,0b10100100,
+      0b00011010,0b10100100,
+      0b00010101,0b01010100,
+      0b00000101,0b01010100,
+      0b00000100,0b00010000,
+      0b00000100,0b00000000
     },
     { /// RS_ACTOR_D23
-        0b01111110,
-        0b10000001,
-        0b10100101,
-        0b01000010,
-        0b00111100,
-        0b00111100,
-        0b00111100,
-        0b00100000
+      0b00000101,0b01010000,
+      0b00000111,0b11010000,
+      0b00010111,0b11010100,
+      0b00100101,0b01010100,
+      0b00100110,0b10011000,
+      0b00000101,0b01011000,
+      0b00000100,0b00010000,
+      0b00000100,0b00000000
     },
     { /// RS_ACTOR_LR2
-        0b00111100,
-        0b01000010,
-        0b01010010,
-        0b01000010,
-        0b00111100,
-        0b00011000,
-        0b00111000,
-        0b00011000
+      0b00000001,0b01010000,
+      0b00001001,0b01110000,
+      0b00001001,0b01110000,
+      0b00001001,0b10010000,
+      0b00000001,0b10010000,
+      0b00000001,0b01100000,
+      0b00000101,0b01010000,
+      0b00000000,0b00010000
     },
     { /// RS_ACTOR_LR3
-        0b00111100,
-        0b01000010,
-        0b01010010,
-        0b01000010,
-        0b00111100,
-        0b00011000,
-        0b00111100,
-        0b01100100
+      0b00000001,0b01010000,
+      0b00001001,0b01110000,
+      0b00001001,0b01110000,
+      0b00001001,0b10010000,
+      0b00000001,0b10010000,
+      0b00000001,0b10010000,
+      0b00000001,0b01010000,
+      0b00000001,0b00000000
     }
 };
 
@@ -225,60 +251,58 @@ enum { S_EMPTY, S_DIRT, S_WALL,
 typedef struct {
     uint8_t raw_sprite_index;
     uint32_t flags;
-    uint16_t colors;
 } sprite_t;
 
 const sprite_t sprites[SPRITES_COUNT] = {
-    {RS_EMPTY, BLIT_1BPP, 0}, /// S_EMPTY
-    {RS_DIRT, BLIT_1BPP, 0x20}, /// S_DIRT
-    {RS_WALL, BLIT_1BPP, 0x20}, /// S_WALL
-    {RS_BARELL, BLIT_1BPP, 0x30}, /// S_BARELL
+    {RS_EMPTY,  BLIT_2BPP}, /// S_EMPTY
+    {RS_DIRT,   BLIT_2BPP}, /// S_DIRT
+    {RS_WALL,   BLIT_2BPP}, /// S_WALL
+    {RS_BARELL, BLIT_2BPP}, /// S_BARELL
     
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_ROTATE, 0x40}, /// S_PARTICLE_U
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_ROTATE|BLIT_FLIP_X, 0x40}, /// S_PARTICLE_D
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_FLIP_X, 0x40}, /// S_PARTICLE_L
-    {RS_PARTICLE_UDLR, BLIT_1BPP, 0x40}, /// S_PARTICLE_R
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_ROTATE},             /// S_PARTICLE_U
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X}, /// S_PARTICLE_D
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_FLIP_X},             /// S_PARTICLE_L
+    {RS_PARTICLE_UDLR, BLIT_2BPP},                         /// S_PARTICLE_R
 
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_ROTATE|BLIT_FLIP_X, 0x40}, /// S_PARTICLE_U2
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X, 0x40}, /// S_PARTICLE_D2
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_FLIP_X|BLIT_FLIP_Y, 0x40}, /// S_PARTICLE_L2
-    {RS_PARTICLE_UDLR, BLIT_1BPP|BLIT_FLIP_Y, 0x40}, /// S_PARTICLE_R2
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y},             /// S_PARTICLE_U2
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X}, /// S_PARTICLE_D2
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y},             /// S_PARTICLE_L2
+    {RS_PARTICLE_UDLR, BLIT_2BPP|BLIT_FLIP_Y},                         /// S_PARTICLE_R2
 
-    {RS_EXPLOSION12, BLIT_1BPP, 0x40}, /// S_EXPLOSION
-    {RS_EXPLOSION12, BLIT_1BPP|BLIT_ROTATE, 0x40}, /// S_EXPLOSION2
+    {RS_EXPLOSION12, BLIT_2BPP},             /// S_EXPLOSION
+    {RS_EXPLOSION12, BLIT_2BPP|BLIT_ROTATE}, /// S_EXPLOSION2
 
-    {RS_GUN_UDLR, BLIT_1BPP|BLIT_ROTATE, 0x30}, /// S_GUN_U
-    {RS_GUN_UDLR, BLIT_1BPP|BLIT_ROTATE|BLIT_FLIP_X, 0x30}, /// S_GUN_D
-    {RS_GUN_UDLR, BLIT_1BPP|BLIT_FLIP_X, 0x30}, /// S_GUN_L
-    {RS_GUN_UDLR, BLIT_1BPP, 0x30}, /// S_GUN_R
+    {RS_GUN_UDLR, BLIT_2BPP|BLIT_ROTATE},             /// S_GUN_U
+    {RS_GUN_UDLR, BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X}, /// S_GUN_D
+    {RS_GUN_UDLR, BLIT_2BPP|BLIT_FLIP_X},             /// S_GUN_L
+    {RS_GUN_UDLR, BLIT_2BPP},                         /// S_GUN_R
 
-    {RS_BOMB, BLIT_1BPP, 0x30}, /// S_BOMB
-    {RS_DETONATOR_0, BLIT_1BPP, 0x30}, /// S_DETONATOR_0
-    {RS_DETONATOR_1, BLIT_1BPP, 0x30}, /// S_DETONATOR_1
+    {RS_BOMB, BLIT_2BPP},        /// S_BOMB
+    {RS_DETONATOR_0, BLIT_2BPP}, /// S_DETONATOR_0
+    {RS_DETONATOR_1, BLIT_2BPP}, /// S_DETONATOR_1
 
-    {RS_LEVER_LR, BLIT_1BPP, 0x30}, /// S_LEVER_L
-    {RS_LEVER_LR, BLIT_1BPP|BLIT_FLIP_X, 0x30}, /// S_LEVER_R
+    {RS_LEVER_L, BLIT_2BPP}, /// S_LEVER_L
+    {RS_LEVER_R, BLIT_2BPP}, /// S_LEVER_R
 
-    {RS_ACTOR_U, BLIT_1BPP, 0x40}, /// S_ACTOR_U
-    {RS_ACTOR_D, BLIT_1BPP, 0x40}, /// S_ACTOR_D
-    {RS_ACTOR_LR, BLIT_1BPP, 0x40}, /// S_ACTOR_L
-    {RS_ACTOR_LR, BLIT_1BPP|BLIT_FLIP_X, 0x40}, /// S_ACTOR_R
+    {RS_ACTOR_U,  BLIT_2BPP}, /// S_ACTOR_U
+    {RS_ACTOR_D,  BLIT_2BPP}, /// S_ACTOR_D
+    {RS_ACTOR_LR, BLIT_2BPP|BLIT_FLIP_X}, /// S_ACTOR_L
+    {RS_ACTOR_LR, BLIT_2BPP}, /// S_ACTOR_R
 
-    {RS_ACTOR_U23, BLIT_1BPP, 0x40}, /// S_ACTOR_U2
-    {RS_ACTOR_D23, BLIT_1BPP, 0x40}, /// S_ACTOR_D2
-    {RS_ACTOR_LR2, BLIT_1BPP, 0x40}, /// S_ACTOR_L2
-    {RS_ACTOR_LR2, BLIT_1BPP|BLIT_FLIP_X, 0x40}, /// S_ACTOR_R2
+    {RS_ACTOR_U23, BLIT_2BPP}, /// S_ACTOR_U2
+    {RS_ACTOR_D23, BLIT_2BPP}, /// S_ACTOR_D2
+    {RS_ACTOR_LR2, BLIT_2BPP|BLIT_FLIP_X}, /// S_ACTOR_L2
+    {RS_ACTOR_LR2, BLIT_2BPP},             /// S_ACTOR_R2
 
-    {RS_ACTOR_U23, BLIT_1BPP|BLIT_FLIP_X, 0x40}, /// S_ACTOR_U3
-    {RS_ACTOR_D23, BLIT_1BPP|BLIT_FLIP_X, 0x40}, /// S_ACTOR_D3
-    {RS_ACTOR_LR3, BLIT_1BPP, 0x40}, /// S_ACTOR_L3
-    {RS_ACTOR_LR3, BLIT_1BPP|BLIT_FLIP_X, 0x40} /// S_ACTOR_R3
+    {RS_ACTOR_U23, BLIT_2BPP|BLIT_FLIP_X}, /// S_ACTOR_U3
+    {RS_ACTOR_D23, BLIT_2BPP|BLIT_FLIP_X}, /// S_ACTOR_D3
+    {RS_ACTOR_LR3, BLIT_2BPP|BLIT_FLIP_X}, /// S_ACTOR_L3
+    {RS_ACTOR_LR3, BLIT_2BPP}              /// S_ACTOR_R3
 };
 
 
 void display_sprite(uint8_t spr, int32_t x, int32_t y) {
     sprite_t s = sprites[spr];
-    *DRAW_COLORS = s.colors;
     blit(raw_sprites[s.raw_sprite_index],x,y,8,8,s.flags);
 }
 // also cf OBJECTS AND STUFF below for binding of things,facings,frames to sprites.
@@ -449,10 +473,10 @@ uint8_t sprite_for_thing(thing_t *t, uint8_t subframe) {
                 }
             }
             switch(t->facing) {
-                case DIR_U: return (subframe>=4 ? S_ACTOR_U2 : S_ACTOR_U3);
-                case DIR_L: return (subframe>=4 ? S_ACTOR_L2 : S_ACTOR_L3);
-                case DIR_D: return (subframe>=4 ? S_ACTOR_D2 : S_ACTOR_D3);
-                case DIR_R: return (subframe>=4 ? S_ACTOR_R2 : S_ACTOR_R3);
+                case DIR_U: return (t->y&1 ? S_ACTOR_U2 : S_ACTOR_U3);
+                case DIR_L: return (t->x&1 ? S_ACTOR_L2 : S_ACTOR_L3);
+                case DIR_D: return (t->y&1 ? S_ACTOR_D2 : S_ACTOR_D3);
+                case DIR_R: return (t->x&1 ? S_ACTOR_R2 : S_ACTOR_R3);
             }
       default: break;
     }
@@ -684,8 +708,8 @@ void update_world() {
 
 #define CENTRE 76 // (SCREEN_SIZE - SPRITE_SIZE)/2 = (190-8)/2 m'kay?
 
-#define VIEW_RADIUS_W 10 // just enough to fit the screen + offset for animation
-#define VIEW_RADIUS_H 10
+#define VIEW_RADIUS_W 11 // just enough to fit the screen + offset for animation
+#define VIEW_RADIUS_H 11
 
 uint8_t visible_from(uint8_t src_x,uint8_t src_y,uint8_t tgt_x,uint8_t tgt_y) {
     return (S1_distance(src_x,tgt_x,MAP_W)<=VIEW_RADIUS_W &&
@@ -734,10 +758,13 @@ void start() {
     thing_t t;
     subframe = 0;
     reset_joystick();
-    PALETTE[0] = 0x13003b;
-    PALETTE[1] = 0x2429b0;
-    PALETTE[2] = 0xf32a06;
-    PALETTE[3] = 0xffdd00;
+
+    PALETTE[0] = 0x521296;
+    PALETTE[1] = 0x8a1fac;
+    PALETTE[2] = 0xd4864a;
+    PALETTE[3] = 0xebdb5e;
+
+    *DRAW_COLORS = 0x4320;
     initialize_world();
 }
 
