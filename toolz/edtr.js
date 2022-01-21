@@ -3,7 +3,7 @@
 
 /// colorz:
 let PALETTE = ['#521296','#8a1fac','#d4864a','#ebdb5e'];
-//let PALETTE = ['#141433','#141f66','#244ab3','#668fcc'];
+let PALETTE2 = ['#141433','#141f66','#244ab3','#668fcc'];
 
 /// sizez:
 let PIXEL_W = 4;
@@ -15,7 +15,7 @@ let BLIT_FLIP_Y = 2;
 let BLIT_ROTATE = 4;
 
 /// turn sprites into bitmaps:
-let mk_sprite = (s,trns) => {    
+let mk_sprite = (s,trns,pal) => {
     var canvas = document.createElement('canvas')
     canvas.width = 8*PIXEL_W
     canvas.height = 8*PIXEL_H
@@ -29,11 +29,11 @@ let mk_sprite = (s,trns) => {
             if((trns&BLIT_ROTATE)>0) { [i0,j0] = [7-j0,i0]; }
             if((trns&BLIT_FLIP_X)>0) i0=7-i0; /// :D
             if((trns&BLIT_FLIP_Y)>0) j0=7-j0; /// :)
-            var color = PALETTE[0];
+            var color = pal[0];
             switch(SPRITES[s][j0][i0]) {
-                case ':': color = PALETTE[1]; break;
-                case '*': color = PALETTE[2]; break;
-                case '#': color = PALETTE[3]; break;
+                case ':': color = pal[1]; break;
+                case '*': color = pal[2]; break;
+                case '#': color = pal[3]; break;
             }
             context.fillStyle = color
             context.fillRect(i*PIXEL_W,j*PIXEL_H,PIXEL_W,PIXEL_H)
@@ -44,62 +44,59 @@ let mk_sprite = (s,trns) => {
 
 /// gen tiles
 let TILES = {
-'S_FLOOR': mk_sprite('RS_FLOOR',BLIT_2BPP),
-'S_DIRT': mk_sprite('RS_DIRT',BLIT_2BPP),
-'S_DIRT2': mk_sprite('RS_DIRT2',BLIT_2BPP), // !
-'S_WALL': mk_sprite('RS_WALL',BLIT_2BPP),
-'S_WALL2': mk_sprite('RS_WALL_O',BLIT_2BPP), // !
-'S_WALL_H1': mk_sprite('RS_WALL_H1',BLIT_2BPP), // !
-'S_WALL_V1': mk_sprite('RS_WALL_H1',BLIT_2BPP|BLIT_ROTATE), // !
-'S_WALL_H2': mk_sprite('RS_WALL_H2',BLIT_2BPP), // !
-'S_WALL_V2': mk_sprite('RS_WALL_H2',BLIT_2BPP|BLIT_ROTATE), // !
-'S_WALL_H3': mk_sprite('RS_WALL_H3',BLIT_2BPP), // !
-'S_WALL_V3': mk_sprite('RS_WALL_H3',BLIT_2BPP|BLIT_ROTATE), // !
-'S_PIPE_H1': mk_sprite('RS_PIPE_H',BLIT_2BPP), // !
-'S_PIPE_V1': mk_sprite('RS_PIPE_H',BLIT_2BPP|BLIT_ROTATE), // !
-'S_PIPE_H2': mk_sprite('RS_PIPE_H2',BLIT_2BPP), // !
-'S_PIPE_V2': mk_sprite('RS_PIPE_H2',BLIT_2BPP|BLIT_ROTATE), // !
-'S_PIPE_HE': mk_sprite('RS_PIPE_HE',BLIT_2BPP), // !
-'S_PIPE_VE': mk_sprite('RS_PIPE_HE',BLIT_2BPP|BLIT_ROTATE), // !
-'S_PIPE_HS': mk_sprite('RS_PIPE_HS',BLIT_2BPP), // !
-'S_PIPE_VS': mk_sprite('RS_PIPE_HS',BLIT_2BPP|BLIT_ROTATE), // !
-'S_PIPE_BR': mk_sprite('RS_PIPE_T',BLIT_2BPP), // !
-'S_PIPE_BL': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_ROTATE), // !
-'S_EVIL_EYE_H': mk_sprite('RS_EVIL_EYE_C2',BLIT_2BPP), // !
+'S_FLOOR': mk_sprite('RS_FLOOR',BLIT_2BPP,PALETTE2),
+'S_DIRT': mk_sprite('RS_DIRT',BLIT_2BPP,PALETTE2),
+'S_DIRT2': mk_sprite('RS_DIRT2',BLIT_2BPP,PALETTE2), // !
+'S_WALL': mk_sprite('RS_WALL',BLIT_2BPP,PALETTE2),
+'S_WALL2': mk_sprite('RS_WALL_O',BLIT_2BPP,PALETTE2), // !
+'S_WALL_H1': mk_sprite('RS_WALL_H1',BLIT_2BPP,PALETTE2), // !
+'S_WALL_V1': mk_sprite('RS_WALL_H1',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_WALL_H2': mk_sprite('RS_WALL_H2',BLIT_2BPP,PALETTE2), // !
+'S_WALL_V2': mk_sprite('RS_WALL_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_WALL_H3': mk_sprite('RS_WALL_H3',BLIT_2BPP,PALETTE2), // !
+'S_WALL_V3': mk_sprite('RS_WALL_H3',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_H1': mk_sprite('RS_PIPE_H',BLIT_2BPP,PALETTE2), // !
+'S_PIPE_V1': mk_sprite('RS_PIPE_H',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_H2': mk_sprite('RS_PIPE_H2',BLIT_2BPP,PALETTE2), // !
+'S_PIPE_V2': mk_sprite('RS_PIPE_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_HE': mk_sprite('RS_PIPE_HE',BLIT_2BPP,PALETTE2), // !
+'S_PIPE_VE': mk_sprite('RS_PIPE_HE',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_HS': mk_sprite('RS_PIPE_HS',BLIT_2BPP,PALETTE2), // !
+'S_PIPE_VS': mk_sprite('RS_PIPE_HS',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_BR': mk_sprite('RS_PIPE_T',BLIT_2BPP,PALETTE2), // !
+'S_PIPE_BL': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_EVIL_EYE_H': mk_sprite('RS_EVIL_EYE_C2',BLIT_2BPP,PALETTE2), // !
+/// these guns are quite aesthetic, not all need to be objects and shoot y'know
+'S_GUN_U': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_GUN_D': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE2),
+'S_GUN_L': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE2),
+'S_GUN_R': mk_sprite('RS_GUN_UDLR',BLIT_2BPP,PALETTE2),
+
 }
 let OBJECTS = {
-'S_BARELL': mk_sprite('RS_BARELL',BLIT_2BPP),
-'S_PARTICLE_U': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE),
-'S_PARTICLE_D': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X),
-'S_PARTICLE_L': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X),
-'S_PARTICLE_R': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP),
-'S_PARTICLE_U2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y),
-'S_PARTICLE_D2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X),
-'S_PARTICLE_L2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y),
-'S_PARTICLE_R2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_Y),
-'S_EXPLOSION': mk_sprite('RS_EXPLOSION12',BLIT_2BPP),
-'S_EXPLOSION2': mk_sprite('RS_EXPLOSION12',BLIT_2BPP|BLIT_ROTATE),
-'S_GUN_U': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE),
-'S_GUN_D': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X),
-'S_GUN_L': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_FLIP_X),
-'S_GUN_R': mk_sprite('RS_GUN_UDLR',BLIT_2BPP),
-'S_BOMB': mk_sprite('RS_BOMB',BLIT_2BPP),
-'S_DETONATOR_0': mk_sprite('RS_DETONATOR_0',BLIT_2BPP),
-'S_DETONATOR_1': mk_sprite('RS_DETONATOR_1',BLIT_2BPP),
-'S_LEVER_L': mk_sprite('RS_LEVER_L',BLIT_2BPP),
-'S_LEVER_R': mk_sprite('RS_LEVER_R',BLIT_2BPP),
-'S_ACTOR_U': mk_sprite('RS_ACTOR_U',BLIT_2BPP),
-'S_ACTOR_D': mk_sprite('RS_ACTOR_D',BLIT_2BPP),
-'S_ACTOR_L': mk_sprite('RS_ACTOR_LR',BLIT_2BPP|BLIT_FLIP_X),
-'S_ACTOR_R': mk_sprite('RS_ACTOR_LR',BLIT_2BPP),
-'S_ACTOR_U2': mk_sprite('RS_ACTOR_U23',BLIT_2BPP),
-'S_ACTOR_D2': mk_sprite('RS_ACTOR_D23',BLIT_2BPP),
-'S_ACTOR_L2': mk_sprite('RS_ACTOR_LR2',BLIT_2BPP|BLIT_FLIP_X),
-'S_ACTOR_R2': mk_sprite('RS_ACTOR_LR2',BLIT_2BPP),
-'S_ACTOR_U3': mk_sprite('RS_ACTOR_U23',BLIT_2BPP|BLIT_FLIP_X),
-'S_ACTOR_D3': mk_sprite('RS_ACTOR_D23',BLIT_2BPP|BLIT_FLIP_X),
-'S_ACTOR_L3': mk_sprite('RS_ACTOR_LR3',BLIT_2BPP|BLIT_FLIP_X),
-'S_ACTOR_R3': mk_sprite('RS_ACTOR_LR3',BLIT_2BPP)
+'S_BARELL': mk_sprite('RS_BARELL',BLIT_2BPP,PALETTE),
+'S_PARTICLE_U': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+'S_PARTICLE_D': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
+'S_PARTICLE_L': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
+'S_PARTICLE_R': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP,PALETTE),
+'S_PARTICLE_U2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
+'S_PARTICLE_D2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X,PALETTE),
+'S_PARTICLE_L2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y,PALETTE),
+'S_PARTICLE_R2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
+'S_EXPLOSION': mk_sprite('RS_EXPLOSION12',BLIT_2BPP,PALETTE),
+'S_EXPLOSION2': mk_sprite('RS_EXPLOSION12',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+'S_GUN_U': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+'S_GUN_D': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
+'S_GUN_L': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
+'S_GUN_R': mk_sprite('RS_GUN_UDLR',BLIT_2BPP,PALETTE),
+'S_BOMB': mk_sprite('RS_BOMB',BLIT_2BPP,PALETTE),
+'S_DETONATOR_0': mk_sprite('RS_DETONATOR_0',BLIT_2BPP,PALETTE),
+'S_DETONATOR_1': mk_sprite('RS_DETONATOR_1',BLIT_2BPP,PALETTE),
+'S_LEVER_L': mk_sprite('RS_LEVER_L',BLIT_2BPP,PALETTE),
+'S_LEVER_R': mk_sprite('RS_LEVER_R',BLIT_2BPP,PALETTE),
+
+'S_ACTOR_D': mk_sprite('RS_ACTOR_D',BLIT_2BPP,PALETTE),
+
 };
 
 
@@ -161,8 +158,21 @@ let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     //// no point adding *ACTOR* stuff
 };
 
+let find_actor_or_zero = () => {
+    var [ax,ay] = [0,0];
+    /// perhaps the game starting point was picked?
+    var os=the_objs.filter(o=>o[0]=="S_ACTOR_D")
+    if(os.length>0) {
+        [ax,ay] = [os[0][1],os[0][2]]
+        /// just in case, this will not happen now but HUNOZ
+        for(var oi=1;oi<os.length;oi++) the_objs[os[oi][3]][0]=":removeme:";
+        brush_up_objs()        
+    }
+    return [ax,ay]
+};
+
 let dump_obj_to_c = o => {
-    var [sprite,x,y,ind] = o;
+    var [sprite,x,y,ind] = o;    
     var [kind,dir] = obj_sprite2kindir[sprite];
     str  = "    //// object #"+ind+"\n"
     str += "    t = fresh_thing();\n"
@@ -178,6 +188,7 @@ let dump_obj_to_c = o => {
 }
 
 let dump_c = () => {
+    var [ax,ay] = find_actor_or_zero(true)
     str = "uint8_t the_map[MAP_H][MAP_W] = {\n"
     str += the_map.map(r => "{"+r.join(",")+"}").join(",\n"); // :D
     str += "};\n\n"
@@ -189,11 +200,11 @@ let dump_c = () => {
     str += "    first_free=0;\n"
     str += "    last_occupied=0;\n"
     str += "    t.kind = KIND_HERO;\n"
-    str += "    t.x = 18; t.y = 10;\n" //// TODO może jednak dodawajmy z mapy gdzie zaczyna?
+    str += "    t.x = "+ax+"; t.y = "+ay+";\n"
     str += "    t.facing = DIR_D; t.move = DIR_C;\n"
     str += "    t.counter = 0; t.max_counter = 0;\n"
     str += "    add_thing(t);\n"
-    str += the_objs.map(dump_obj_to_c).join("\n")
+    str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(dump_obj_to_c).join("\n")
     str += "}\n\n"
     return str
 }
@@ -268,7 +279,9 @@ let draw_map = (cx,cy) => {
             var s = map_at(mx,my);
             kontekst.drawImage(TILES[s],dx,dy);
             var os = the_objs.filter(o=>(o[1]==mx && o[2]==my && o[0]!=":removeme:"));
-            for(var oi=0;oi<os.length;oi++) kontekst.drawImage(OBJECTS[os[oi][0]],dx,dy);
+            for(var oi=0;oi<os.length;oi++)
+                if(os[oi][0]!=":removeme:") /// it's getting worse XD
+                    kontekst.drawImage(OBJECTS[os[oi][0]],dx,dy);            
             if(mx==MX && my==MY) {
                 kontekst.beginPath();
                 kontekst.rect(dx+1,dy+1,8*PIXEL_W-1,8*PIXEL_H-1);
@@ -295,14 +308,23 @@ kanwa.onmousemove = e => {
     document.getElementById('info').innerHTML = '('+MX+','+MY+') cur.ad.'+cur_adding; /// todo: dopisywać co się tera dodaje??
 };
 
+let brush_up_objs = () => {    
+    the_objs = the_objs.filter(o=>o[0]!=":removeme:").map((o,i)=>[o[0],o[1],o[2],i])
+}
+
 kanwa.onmousedown = e => {
     if(cur_adding=="TILES") { the_map[MY][MX]=cur_tile; } 
     if(cur_adding=="OBJECTS") {
         var os = the_objs.filter(o=>(o[1]==MX && o[2]==MY));
         if(os.length>0) { /// REMOVAL MODE
             for(var oi=0;oi<os.length;oi++) the_objs[os[oi][3]][0]=":removeme:";
-            the_objs=the_objs.filter(o=>o[0]!=":removeme:") /// <3
+            brush_up_objs()
         } else { /// INSERTION MODE
+            /// ok look, at most one starting position:
+            if(cur_object=="S_ACTOR_D") {
+                the_objs = the_objs.map(o=>(o[0]==cur_object?[":removeme:",o[1],o[2],o[3]]:o))
+                brush_up_objs()
+            }
             the_objs.push([cur_object,MX,MY,the_objs.length]) // :D
         }
     } /// tertium non datur
@@ -334,7 +356,9 @@ kanwa_menu2.onmousedown = e => {
 }
 
 
-setInterval(()=>{draw_map(CX,CY)},66);
+[CX,CY] = find_actor_or_zero();
+
+setInterval(()=>{draw_map(CX,CY)},99);
 redraw_menu()
 redraw_menu2()
 
