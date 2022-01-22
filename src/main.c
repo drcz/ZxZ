@@ -1,4 +1,5 @@
 #include "wasm4.h"
+uint8_t visible_from(uint8_t,uint8_t,uint8_t,uint8_t); /// :)
 
 //// JOYSTICK AND STUFF ///////////////////////////////////////////////////////////
 
@@ -16,6 +17,14 @@ void update_joystick() {
     if (gamepad & BUTTON_DOWN) joystick = DIR_D;
     if (gamepad & BUTTON_RIGHT) joystick = DIR_R;
 }
+
+//// simple sfx... ////////////////////////////////////////////////////////////////
+void sfx_push() { tone(200, 10|(4<<8)|(5<<24), 40, TONE_NOISE); }
+void sfx_open() { tone(200|(400<<16), 20|(5<<8)|(1<<24), 40, TONE_NOISE); }
+void sfx_boom() { tone(120|(80<<16), 60, 100, TONE_NOISE); }
+void sfx_step() { tone(30, 2|(2<<8)|(2<<24), 50, TONE_TRIANGLE); }
+
+uint8_t music_on = 1; /// :)
 
 //// SPRITES AND STUFF ////////////////////////////////////////////////////////////
 
@@ -1792,6 +1801,7 @@ void initialize_world() {
 
 //// GAME MECHANICS AND STUFF /////////////////////////////////////////////////////
 uint8_t game_behind_mirror = 0;
+uint16_t oxygen_level = 16*99; /// whatever.
 
 void dreamy_palette();
 void behind_the_mirror_palette();
@@ -1815,18 +1825,108 @@ void the_other_side() {
     }
 }
 
+/// TMP TMP potem to zakodujemy w numerkach kindów?
+uint8_t is_flamable(uint8_t kind) {
+    switch(kind) {
+    case KIND_BARELL:
+    case KIND_DOOR:
+    case KIND_LEVER: 
+    case KIND_GUN: return 1;
+    default: break;
+    }
+    return 0;
+}
+
+
+uint8_t is_explodable(uint8_t kind) {
+    switch(kind) {   
+    case KIND_BOMB:     
+    case KIND_OXYGEN:
+    case KIND_GUN: return 1;
+    default: break;
+    }
+    return 0;
+}
+
+
+uint8_t explosion_radius_for(uint8_t kind) {
+    switch(kind) {
+    case KIND_OXYGEN:
+    case KIND_BOMB: return 1;
+    default: break;
+    }
+    return 0;
+}
+
+void explosion(thing_t *subject) {
+    uint16_t t;
+    uint8_t radius = 0;
+    int8_t i,j;
+    thing_t boom;
+    subject->move = DIR_C; subject->facing = DIR_C;
+    if(is_flamable(subject->kind)) {
+        subject->kind = KIND_FIRE;
+        subject->counter = 33; subject->max_counter = 0; /// hmm?
+    }
+    if(is_explodable(subject->kind)) {
+        radius = explosion_radius_for(subject->kind);
+        subject->kind = KIND_EXPLOSION;
+        subject->counter = 2; subject->max_counter = 0;
+        for(t=0;t<=last_occupied;t++) {
+            if(things[t].kind==KIND_NOTHING) continue;
+            if(S1_distance(things[t].x,subject->x,MAP_W)<=radius &&
+               S1_distance(things[t].y,subject->y,MAP_H)<=radius) explosion(&things[t]);
+        }
+        /// ok and just for the giggles:
+        if(visible_from(subject->x,subject->y,things[0].x,things[0].y)) sfx_boom();
+        for(i=-radius;i<=radius;i++)
+            for(j=-radius;j<=radius;j++) {
+                boom = fresh_thing();
+                boom.kind = KIND_EXPLOSION;
+                boom.x = (subject->x+i)&(MAP_W-1);
+                boom.y = (subject->y+j)&(MAP_H-1);
+                boom.counter = 3;
+                if(read_map_at(boom.x,boom.y,game_behind_mirror)==S_FLOOR) add_thing(boom);
+            }
+    }
+}
 
 /// ok this is pretty specific but for now...
 void explode_all_bombs_with_label(uint8_t label) {
     uint16_t t;
     for(t=0;t<=last_occupied;t++) {
         if(things[t].kind!=KIND_BOMB) continue;
-        if(things[t].label==label) {
-            things[t].kind = KIND_EXPLOSION;
-            things[t].move = DIR_C; things[t].facing = DIR_C;
-            things[t].counter = 2; things[t].max_counter = 0;
-            /// TODO: chain reaction...
-        }
+        if(things[t].label==label) explosion(&things[t]);
+    }
+}
+
+/// this might not work very well...
+uint8_t is_free(uint8_t x, uint8_t y) {
+    uint16_t t;
+    if(read_map_at(x,y,game_behind_mirror)!=S_FLOOR) return 0; /// XD
+    for(t=0;t<=last_occupied;t++) {
+        if(things[t].kind==KIND_NOTHING) continue;
+        if(things[t].x==x && things[t].y==y) return 0;
+    }
+    return 1;
+}
+
+void spawn_smoke(uint8_t x, uint8_t y) {
+    thing_t smoke;
+    smoke = fresh_thing();
+    smoke.kind = KIND_SMOKE; smoke.counter=6;
+    smoke.x = x; smoke.y = (y-1)&(MAP_H-1);
+    if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
+    if(x%2==0) { /// tu raczej damy jakiś megalicznik
+        smoke.x = (x-1)&(MAP_W-1); smoke.y = y;
+        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
+        smoke.x = (x+1)&(MAP_W-1); smoke.y = y;
+        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
+    } else {
+        smoke.x = (x+1)&(MAP_W-1); smoke.y = y;
+        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
+        smoke.x = (x-1)&(MAP_W-1); smoke.y = y;
+        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
     }
 }
 
@@ -1849,6 +1949,7 @@ int can_move(thing_t *mover) {
             /// na szybkości TMP
             if(mover->kind==KIND_HERO && collider->kind==KIND_DOOR) {
                 remove_thing(t); /// the collider
+                sfx_open(); // XD
                 return 0;
             }
             if(mover->kind==KIND_HERO && collider->kind==KIND_MIRROR) {
@@ -1857,27 +1958,51 @@ int can_move(thing_t *mover) {
                     return 1;
                 }
             }
-            
+            if(mover->kind==KIND_PARTICLE) {
+                switch(collider->kind) {
+                case KIND_NOTHING:
+                case KIND_FIRE:
+                case KIND_SMOKE:
+                case KIND_PARTICLE:
+                    mover->x = nx; mover->y = ny;
+                    return 1;
+                case KIND_CRYSTAL:
+                    // TODO: spawn 2 particles
+                    return 0;
+                default:
+                    if(is_explodable(collider->kind) || is_flamable(collider->kind))
+                        explosion(collider);
+                    return 0;
+                }
+            }
+
             switch(collider->kind) {
                 case KIND_NOTHING:
                     mover->x = nx; mover->y = ny;
                     return 1;
-
-                case KIND_GUN:
-                    collider->facing = mover->facing;
-                    return 0;
 
                 case KIND_DETONATOR_0:
                     collider->kind = KIND_DETONATOR_1;
                     explode_all_bombs_with_label(collider->label); /// XD
                     return 0;
 
+                case KIND_OXYGEN:
+                    if(mover->kind==KIND_HERO) {
+                        oxygen_level += 16;
+                        if(oxygen_level > 1600) oxygen_level=1600;
+                    }
                 case KIND_BARELL: /// TODO: other pushables...
                 case KIND_BOMB:
                 case KIND_MIRROR: /// with the exception of frontal passing it's pushable
+                    if(mover->kind==KIND_PARTICLE) {
+                        explosion(collider); explosion(mover);
+                        return 0;
+                    } //// lol
                     collider->move = mover->move;
                     if(can_move(collider)) {
                         mover->x = nx; mover->y = ny;
+                        if(visible_from(mover->x,mover->y,things[0].x,things[0].y))
+                            sfx_push();
                         return 1;
                     }
                     collider->move=DIR_C;
@@ -1913,6 +2038,8 @@ void update_world() {
                 things[t].move = joystick;
                 if(joystick!=DIR_C) {
                     things[t].facing = joystick;
+                    sfx_step();
+                    oxygen_level--;
                     reset_joystick(); /// hehe.
                 }
                 if(!can_move(&things[t])) things[t].move = DIR_C;
@@ -1930,7 +2057,7 @@ void update_world() {
                 if(--(things[t].counter)<=0) remove_thing(t); // :)
                 break;
             case KIND_GUN:
-                if(--(things[t].counter)<=0) {
+                if(--(things[t].counter)==1) {
                     things[t].counter=things[t].max_counter;
                     newthing.kind = KIND_PARTICLE;
                     newthing.facing = things[t].facing;
@@ -1943,8 +2070,18 @@ void update_world() {
                 }
                 /// guns don't move.
                 break;
+            case KIND_FIRE:
+                if(--(things[t].counter)<1) remove_thing(t);
+                else if(things[t].counter%10) spawn_smoke(things[t].x,things[t].y);
+                break;
+            case KIND_SMOKE:
+                if(--(things[t].counter)<1) remove_thing(t);
+                else if(things[t].counter==2) spawn_smoke(things[t].x,things[t].y);
+                break;
             case KIND_BARELL:
+            case KIND_OXYGEN:
             case KIND_BOMB:
+            case KIND_MIRROR:
                 break; /// skip the can_move thing, it's managed by the mover.
             /// TODO.
             default:
@@ -1977,6 +2114,7 @@ void display(uint8_t subframe) {
     thing_t *a_thing;
     thing_t *actor = &things[0]; // :D
 
+    *DRAW_COLORS = 0x4320; // :)
     //// draw the map
     x_offset = CENTRE + (8-subframe)*dx_for(actor->move);
     y_offset = CENTRE + (8-subframe)*dy_for(actor->move);
@@ -2000,6 +2138,11 @@ void display(uint8_t subframe) {
             display_sprite(spr,x,y);
         }
     }
+    /// and display oxygen level
+    *DRAW_COLORS = 0x0021; // :)    
+    rect(29,145,102,10);
+    *DRAW_COLORS = 0x0013; // :)
+    rect(30,146,(oxygen_level>>4),8);
 }
 
 void dreamy_palette() {
@@ -2017,6 +2160,112 @@ void behind_the_mirror_palette() {
 }
 
 
+//// beautiful music mmm... ///////////////////////////////////////////////////////
+
+/// hahahahaha
+#define C1 32
+#define C2 65
+#define G1 49
+#define As1 58
+#define F1 43
+#define Ds3 155
+#define As2 116
+#define Cs2 69
+#define Gs2 103 // maybe 104...?
+#define C3 (2*C2)
+#define G2 (2*G1)
+#define F2 (2*F1)
+
+#define LEN 80
+const uint32_t tune[LEN] = {
+    C2, C2, C2, C3, Ds3,
+    C2, C2, C2, C3, Ds3,
+    C2, C2, C2, C3, Ds3,
+    C2, C2, C2, C3, Ds3,
+    G1, G1, G1, G2, As2,
+    G1, G1, G1, G2, As2,
+    G1, G1, G1, G2, As2,
+    G1, G1, G1, G2, As2,
+    As1, As1, As1, As2, Cs2*2,
+    As1, As1, As1, As2, Cs2*2,
+    As1, As1, As1, As2, Cs2*2,
+    As1, As1, As1, As2, Cs2*2,
+    F1, F1, F1, F2, Gs2,
+    F1, F1, F1, F2, Gs2,
+    F1, F1, F1, F2, Gs2,
+    F1, F1, F1, F2, Gs2
+};
+
+
+//// GAME STATES AND STUFF ////////////////////////////////////////////////////////
+
+enum {TITLE,GAME,OVER,VICTOLY};
+uint8_t gamestate;
+uint8_t subframe = 0;
+
+
+uint8_t tune_pc=0;
+
+void title_frame() {
+    *DRAW_COLORS = 2;
+    text("       ZxZ", 12, 29);
+    text("  wasm4 gamejam",12,62);
+    text("jan.2022 by drcz",12,70);
+    text("to save the planet",10,134);
+    text("    press X...",12,142);
+    *DRAW_COLORS = 4;
+    text("       ZxZ", 11, 28);
+    text("          X",11,141);
+    if(subframe==0) {
+        tone(tune[tune_pc]*2, 20, 100, TONE_PULSE1);
+        tone(tune[tune_pc]-1, 20, 100, TONE_PULSE2);
+        if(tune[tune_pc]<=C2) tone(tune[tune_pc]*3, 60, 100, TONE_TRIANGLE);
+        tune_pc++; tune_pc%=LEN;
+    }
+}
+
+/// THE GAME MAIN DRIVER THINGS ///////////////////////////////////////////////////
+
+
+void start() {
+    gamestate = TITLE;
+    subframe = 0;
+    dreamy_palette();
+}
+
+void update () {
+    
+    switch(gamestate) {
+        case TITLE:
+            title_frame();
+            if (*GAMEPAD1 & (BUTTON_1|BUTTON_2)) {
+                gamestate=GAME;
+                dreamy_palette();
+                *DRAW_COLORS = 0x4320; // :)
+                game_behind_mirror = 0;
+                reset_joystick();
+                initialize_world();
+            }
+            break;
+    case GAME: update_joystick();
+        if(subframe==0) update_world();
+        if(subframe==4 && music_on) {
+            if(tune[tune_pc]<=C2) tone(tune[tune_pc], 60, 6, TONE_PULSE1);
+            tone(tune[tune_pc]*2, 20, 3, TONE_PULSE2);
+            tune_pc++; tune_pc%=LEN;
+        }
+        display(subframe);
+        if(subframe==7) reset_joystick(); /// ?!
+        break;
+    /// TODO: GAME OVER, VICTOLY
+    default: break;
+    }    
+    subframe++;
+    subframe%=9;    
+}
+
+
+/*
 /// THE GAME MAIN DRIVER THINGS ///////////////////////////////////////////////////
 uint8_t subframe = 0;
 
@@ -2038,3 +2287,4 @@ void update () {
     if(subframe==7) reset_joystick(); /// ?!
     if(subframe==8) subframe=0;
 }
+*/
