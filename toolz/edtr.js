@@ -114,12 +114,13 @@ let OBJECTS = {
 'S_ELECTRIC_H1': mk_sprite('RS_ELECTRIC',BLIT_2BPP,PALETTE),
 'S_ELECTRIC_V1': mk_sprite('RS_ELECTRIC',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 
-/*
+
 'S_TENTACLES_U': mk_sprite('RS_TENTACLES1',BLIT_2BPP,PALETTE),
 'S_TENTACLES_D': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
 'S_TENTACLES_L': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 'S_TENTACLES_R': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
-
+'S_BIGBATON':mk_sprite('RS_BIGBATON',BLIT_2BPP,PALETTE),
+/*
 'S_CORKSCREW':mk_sprite('RS_CORKSCREW',BLIT_2BPP,PALETTE),
 'S_WATER1': mk_sprite('RS_WATER1', BLIT_2BPP,PALETTE),
 'S_WATER2': mk_sprite('RS_WATER1', BLIT_2BPP|BLIT_FLIP_X,PALETTE),
@@ -206,8 +207,8 @@ let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     "S_TENTACLES_R": ["KIND_TENTACLES","DIR_R"],
     "S_OXYGEN": ["KIND_OXYGEN","DIR_C"],
     "S_CRYSTAL": ["KIND_CRYSTAL","DIR_C"],
-
-    "S_CORKSCREW": ["KIND_CORKSCREW","DIR_C"]
+    "S_CORKSCREW": ["KIND_CORKSCREW","DIR_C"],
+    "S_BIGBATON": ["KIND_BIGBATON","DIR_C"]
     //// no point adding *ACTOR* stuff
 };
 
@@ -224,6 +225,7 @@ let find_actor_or_zero = () => {
     return [ax,ay]
 };
 
+/*
 let dump_obj_to_c = o => {
     var [sprite,x,y,ind] = o;
     var [kind,dir] = obj_sprite2kindir[sprite];
@@ -240,6 +242,7 @@ let dump_obj_to_c = o => {
     str += "    add_thing(t);\n"
     return str
 }
+
 
 let dump_c = () => {
     var [ax,ay] = find_actor_or_zero(true)
@@ -262,6 +265,37 @@ let dump_c = () => {
     str += "}\n\n"
     return str
 }
+*/
+//// novum!
+let dump_obj_to_c = o => {
+    var [sprite,x,y,ind] = o;
+    var [kind,dir] = obj_sprite2kindir[sprite];
+    var [cnt,mcnt] = [0,0];
+    if(kind=="KIND_GUN") { cnt = (y%5)+1; mcnt = 5; }
+    str  = "    //// object #"+ind+"\n"
+    str += "    add_thing("+kind+","+x+","+y+","+dir+",DIR_C,"+cnt+","+mcnt+",0);\n"
+    return str
+}
+
+
+let dump_c = () => {
+    var [ax,ay] = find_actor_or_zero(true)
+    str = "uint8_t the_map[MAP_H][MAP_W] = {\n"
+    str += the_map.map(r => "{"+r.join(",")+"}").join(",\n"); // :D
+    str += "};\n\n"
+    str += "//////////////////////////////////////////////////\n\n"
+    str += "void initialize_world() {\n"
+    str += "    uint8_t x,y;\n"
+    str += "    uint16_t i;\n"
+    str += "    for(i=0;i<MAX_THINGS;i++) remove_thing(i); /// just in case...\n"
+    str += "    first_free=0;\n"
+    str += "    last_occupied=0;\n\n"
+    str += "    add_thing(KIND_HERO,"+ax+","+ay+",DIR_D,DIR_C,0,0,0);\n\n"
+    str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(dump_obj_to_c).join("")
+    str += "}\n\n"
+    return str
+}
+
 
 
 var baton=document.getElementById("baton");
