@@ -46,45 +46,51 @@ let mk_sprite = (s,trns,pal) => {
 let TILES = {
 'S_FLOOR': mk_sprite('RS_FLOOR',BLIT_2BPP,PALETTE2),
 'S_DIRT': mk_sprite('RS_DIRT',BLIT_2BPP,PALETTE2),
-'S_DIRT2': mk_sprite('RS_DIRT2',BLIT_2BPP,PALETTE2), // !
+'S_DIRT2': mk_sprite('RS_DIRT2',BLIT_2BPP,PALETTE2),
 'S_WALL': mk_sprite('RS_WALL',BLIT_2BPP,PALETTE2),
-'S_WALL2': mk_sprite('RS_WALL_O',BLIT_2BPP,PALETTE2), // !
-'S_WALL_H1': mk_sprite('RS_WALL_H1',BLIT_2BPP,PALETTE2), // !
-'S_WALL_V1': mk_sprite('RS_WALL_H1',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_WALL_H2': mk_sprite('RS_WALL_H2',BLIT_2BPP,PALETTE2), // !
-'S_WALL_V2': mk_sprite('RS_WALL_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_WALL_H3': mk_sprite('RS_WALL_H3',BLIT_2BPP,PALETTE2), // !
-'S_WALL_V3': mk_sprite('RS_WALL_H3',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_PIPE_H1': mk_sprite('RS_PIPE_H',BLIT_2BPP,PALETTE2), // !
-'S_PIPE_V1': mk_sprite('RS_PIPE_H',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_PIPE_H2': mk_sprite('RS_PIPE_H2',BLIT_2BPP,PALETTE2), // !
-'S_PIPE_V2': mk_sprite('RS_PIPE_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_PIPE_HE': mk_sprite('RS_PIPE_HE',BLIT_2BPP,PALETTE2), // !
-'S_PIPE_VE': mk_sprite('RS_PIPE_HE',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_PIPE_HS': mk_sprite('RS_PIPE_HS',BLIT_2BPP,PALETTE2), // !
-'S_PIPE_VS': mk_sprite('RS_PIPE_HS',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_PIPE_BR': mk_sprite('RS_PIPE_T',BLIT_2BPP,PALETTE2), // !
-'S_PIPE_BL': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
-'S_EVIL_EYE_H': mk_sprite('RS_EVIL_EYE_C2',BLIT_2BPP,PALETTE2), // !
+'S_WALL2': mk_sprite('RS_WALL_O',BLIT_2BPP,PALETTE2),
+'S_WALL_H1': mk_sprite('RS_WALL_H1',BLIT_2BPP,PALETTE2), 
+'S_WALL_V1': mk_sprite('RS_WALL_H1',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_WALL_H2': mk_sprite('RS_WALL_H2',BLIT_2BPP,PALETTE2),
+'S_WALL_V2': mk_sprite('RS_WALL_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_WALL_H3': mk_sprite('RS_WALL_H3',BLIT_2BPP,PALETTE2),
+'S_WALL_V3': mk_sprite('RS_WALL_H3',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_PIPE_H1': mk_sprite('RS_PIPE_H',BLIT_2BPP,PALETTE2),
+'S_PIPE_V1': mk_sprite('RS_PIPE_H',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_PIPE_H2': mk_sprite('RS_PIPE_H2',BLIT_2BPP,PALETTE2),
+'S_PIPE_V2': mk_sprite('RS_PIPE_H2',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_PIPE_HE': mk_sprite('RS_PIPE_HE',BLIT_2BPP,PALETTE2),
+'S_PIPE_VE': mk_sprite('RS_PIPE_HE',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_PIPE_HS': mk_sprite('RS_PIPE_HS',BLIT_2BPP,PALETTE2),
+'S_PIPE_VS': mk_sprite('RS_PIPE_HS',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
+'S_PIPE_BR': mk_sprite('RS_PIPE_T',BLIT_2BPP,PALETTE2),
+'S_PIPE_UR': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_ROTATE,PALETTE2), // !
+'S_PIPE_UL': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y,PALETTE2), // !
+'S_PIPE_BL': mk_sprite('RS_PIPE_T',BLIT_2BPP|BLIT_FLIP_X,PALETTE2), // !
+'S_EVIL_EYE_C': mk_sprite('RS_EVIL_EYE_C2',BLIT_2BPP,PALETTE2), // !
 /// these guns are quite aesthetic, not all need to be objects and shoot y'know
 'S_GUN_U': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE2),
 'S_GUN_D': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE2),
 'S_GUN_L': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE2),
 'S_GUN_R': mk_sprite('RS_GUN_UDLR',BLIT_2BPP,PALETTE2),
+/// these also duplicate y'know.
+'S_CORKSCREW':mk_sprite('RS_CORKSCREW',BLIT_2BPP,PALETTE2),
+//'S_WATER1': mk_sprite('RS_WATER1', BLIT_2BPP,PALETTE2),
+//'S_WATER2': mk_sprite('RS_WATER1', BLIT_2BPP|BLIT_FLIP_X,PALETTE2),
 
 }
 let OBJECTS = {
 'S_BARELL': mk_sprite('RS_BARELL',BLIT_2BPP,PALETTE),
-'S_PARTICLE_U': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
-'S_PARTICLE_D': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
-'S_PARTICLE_L': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
-'S_PARTICLE_R': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP,PALETTE),
-'S_PARTICLE_U2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
-'S_PARTICLE_D2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X,PALETTE),
-'S_PARTICLE_L2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y,PALETTE),
-'S_PARTICLE_R2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
+//'S_PARTICLE_U': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+//'S_PARTICLE_D': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
+//'S_PARTICLE_L': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
+//'S_PARTICLE_R': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP,PALETTE),
+//'S_PARTICLE_U2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
+//'S_PARTICLE_D2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y|BLIT_FLIP_X,PALETTE),
+//'S_PARTICLE_L2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_X|BLIT_FLIP_Y,PALETTE),
+//'S_PARTICLE_R2': mk_sprite('RS_PARTICLE_UDLR',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
 'S_EXPLOSION': mk_sprite('RS_EXPLOSION12',BLIT_2BPP,PALETTE),
-'S_EXPLOSION2': mk_sprite('RS_EXPLOSION12',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+//'S_EXPLOSION2': mk_sprite('RS_EXPLOSION12',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 'S_GUN_U': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 'S_GUN_D': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
 'S_GUN_L': mk_sprite('RS_GUN_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
@@ -95,6 +101,29 @@ let OBJECTS = {
 'S_LEVER_L': mk_sprite('RS_LEVER_L',BLIT_2BPP,PALETTE),
 'S_LEVER_R': mk_sprite('RS_LEVER_R',BLIT_2BPP,PALETTE),
 
+'S_MIRROR': mk_sprite('RS_MIRROR',BLIT_2BPP,PALETTE),
+'S_DOOR': mk_sprite('RS_DOOR',BLIT_2BPP,PALETTE),
+'S_JOYSTICK': mk_sprite('RS_JOYSTICK',BLIT_2BPP,PALETTE),
+'S_ROBOT_U': mk_sprite('RS_ROBOT_UDLR',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+'S_ROBOT_D': mk_sprite('RS_ROBOT_UDLR',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_X,PALETTE),
+'S_ROBOT_L': mk_sprite('RS_ROBOT_UDLR',BLIT_2BPP|BLIT_FLIP_X,PALETTE),
+'S_ROBOT_R': mk_sprite('RS_ROBOT_UDLR',BLIT_2BPP,PALETTE),
+
+'S_OXYGEN': mk_sprite('RS_OXYGEN',BLIT_2BPP,PALETTE),
+'S_CRYSTAL': mk_sprite('RS_CRYSTAL',BLIT_2BPP,PALETTE),
+'S_ELECTRIC_H1': mk_sprite('RS_ELECTRIC',BLIT_2BPP,PALETTE),
+'S_ELECTRIC_V1': mk_sprite('RS_ELECTRIC',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+
+/*
+'S_TENTACLES_U': mk_sprite('RS_TENTACLES1',BLIT_2BPP,PALETTE),
+'S_TENTACLES_D': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
+'S_TENTACLES_L': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE,PALETTE),
+'S_TENTACLES_R': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
+
+'S_CORKSCREW':mk_sprite('RS_CORKSCREW',BLIT_2BPP,PALETTE),
+'S_WATER1': mk_sprite('RS_WATER1', BLIT_2BPP,PALETTE),
+'S_WATER2': mk_sprite('RS_WATER1', BLIT_2BPP|BLIT_FLIP_X,PALETTE),
+*/
 'S_ACTOR_D': mk_sprite('RS_ACTOR_D',BLIT_2BPP,PALETTE),
 
 };
@@ -136,6 +165,7 @@ let dump_js = () => {
 
 let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     "S_BARELL": ["KIND_BARELL","DIR_C"],
+    /*
     "S_PARTICLE_U": ["KIND_PARTICLE","DIR_U"],
     "S_PARTICLE_D": ["KIND_PARTICLE","DIR_D"],
     "S_PARTICLE_L": ["KIND_PARTICLE","DIR_L"],
@@ -144,8 +174,9 @@ let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     "S_PARTICLE_D2": ["KIND_PARTICLE","DIR_D"],
     "S_PARTICLE_L2": ["KIND_PARTICLE","DIR_L"],
     "S_PARTICLE_R2": ["KIND_PARTICLE","DIR_R"],
+    */
     "S_EXPLOSION": ["KIND_EXPLOSION","DIR_C"],
-    "S_EXPLOSION2": ["KIND_EXPLOSION","DIR_C"],
+    //"S_EXPLOSION2": ["KIND_EXPLOSION","DIR_C"],
     "S_GUN_U": ["KIND_GUN","DIR_U"],
     "S_GUN_D": ["KIND_GUN","DIR_D"],
     "S_GUN_L": ["KIND_GUN","DIR_L"],
@@ -155,6 +186,28 @@ let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     "S_DETONATOR_1": ["KIND_DETONATOR_1","DIR_C"],
     "S_LEVER_L": ["KIND_LEVER","DIR_L"],
     "S_LEVER_R": ["KIND_LEVER","DIR_R"],
+    "S_MIRROR": ["KIND_MIRROR","DIR_C"],
+    "S_DOOR": ["KIND_DOOR","DIR_C"],
+    "S_JOYSTICK": ["KIND_JOYSTICK","DIR_C"],
+    "S_ROBOT_L": ["KIND_ROBOT","DIR_L"],
+    "S_ROBOT_R": ["KIND_ROBOT","DIR_R"],
+    "S_ROBOT_U": ["KIND_ROBOT","DIR_U"],
+    "S_ROBOT_D": ["KIND_ROBOT","DIR_D"],
+
+    "S_ELECTRIC_H1": ["KIND_ELECTRIC","DIR_L"],
+    "S_ELECTRIC_H2": ["KIND_ELECTRIC","DIR_L"],
+    "S_ELECTRIC_V1": ["KIND_ELECTRIC","DIR_U"],
+    "S_ELECTRIC_V2": ["KIND_ELECTRIC","DIR_U"],
+//    "S_WATER1": ["KIND_WATER","DIR_C"],
+//    "S_WATER2": ["KIND_WATER","DIR_C"],
+    "S_TENTACLES_U": ["KIND_TENTACLES","DIR_U"],
+    "S_TENTACLES_D": ["KIND_TENTACLES","DIR_D"],
+    "S_TENTACLES_L": ["KIND_TENTACLES","DIR_L"],
+    "S_TENTACLES_R": ["KIND_TENTACLES","DIR_R"],
+    "S_OXYGEN": ["KIND_OXYGEN","DIR_C"],
+    "S_CRYSTAL": ["KIND_CRYSTAL","DIR_C"],
+
+    "S_CORKSCREW": ["KIND_CORKSCREW","DIR_C"]
     //// no point adding *ACTOR* stuff
 };
 
@@ -172,13 +225,14 @@ let find_actor_or_zero = () => {
 };
 
 let dump_obj_to_c = o => {
-    var [sprite,x,y,ind] = o;    
+    var [sprite,x,y,ind] = o;
     var [kind,dir] = obj_sprite2kindir[sprite];
     str  = "    //// object #"+ind+"\n"
     str += "    t = fresh_thing();\n"
     str += "    t.kind = "+kind+";\n"
     str += "    t.x = "+x+"; t.y = "+y+";\n"
-    str += "    t.facing = "+dir+"; t.move = DIR_C;\n"
+    //str += "    t.facing = "+dir+"; t.move = DIR_C;\n"
+    str += "    t.facing = "+dir+";\n"
     if(kind=="KIND_GUN") {
         cntr = (y%5)+1;
         str += "    t.counter = "+cntr+"; t.max_counter = 5;\n"
