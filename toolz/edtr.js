@@ -4,6 +4,7 @@
 /// colorz:
 let PALETTE = ['#521296','#8a1fac','#d4864a','#ebdb5e'];
 let PALETTE2 = ['#141433','#141f66','#244ab3','#668fcc'];
+let PALETTE3 = ['#961252','#ac1f8a','#4a86d4','#5edbeb'];
 
 /// sizez:
 let PIXEL_W = 4;
@@ -77,7 +78,6 @@ let TILES = {
 'S_CORKSCREW':mk_sprite('RS_CORKSCREW',BLIT_2BPP,PALETTE2),
 //'S_WATER1': mk_sprite('RS_WATER1', BLIT_2BPP,PALETTE2),
 //'S_WATER2': mk_sprite('RS_WATER1', BLIT_2BPP|BLIT_FLIP_X,PALETTE2),
-
 }
 let OBJECTS = {
 'S_BARELL': mk_sprite('RS_BARELL',BLIT_2BPP,PALETTE),
@@ -114,6 +114,8 @@ let OBJECTS = {
 'S_ELECTRIC_H1': mk_sprite('RS_ELECTRIC',BLIT_2BPP,PALETTE),
 'S_ELECTRIC_V1': mk_sprite('RS_ELECTRIC',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 
+'S_ELECTRIC_OFF_H': mk_sprite('RS_ELECTRIC',BLIT_2BPP,PALETTE3),
+'S_ELECTRIC_OFF_V': mk_sprite('RS_ELECTRIC',BLIT_2BPP|BLIT_ROTATE,PALETTE3),
 
 'S_TENTACLES_U': mk_sprite('RS_TENTACLES1',BLIT_2BPP,PALETTE),
 'S_TENTACLES_D': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_FLIP_Y,PALETTE),
@@ -208,7 +210,11 @@ let obj_sprite2kindir = { /// this is a reverse of sprite_for_thing() ov main.c
     "S_OXYGEN": ["KIND_OXYGEN","DIR_C"],
     "S_CRYSTAL": ["KIND_CRYSTAL","DIR_C"],
     "S_CORKSCREW": ["KIND_CORKSCREW","DIR_C"],
-    "S_BIGBATON": ["KIND_BIGBATON","DIR_C"]
+    "S_BIGBATON": ["KIND_BIGBATON","DIR_C"],
+
+    "S_ELECTRIC_OFF_H": ["KIND_ELECTRIC_OFF","DIR_L"],
+    "S_ELECTRIC_OFF_V": ["KIND_ELECTRIC_OFF","DIR_U"],
+
     //// no point adding *ACTOR* stuff
 };
 
