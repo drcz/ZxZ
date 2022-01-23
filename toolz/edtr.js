@@ -260,7 +260,7 @@ let dump_c = () => {
     str += "    first_free=0;\n"
     str += "    last_occupied=0;\n\n"
     str += "    add_thing(KIND_HERO,"+ax+","+ay+",DIR_D,DIR_C,0,0,0);\n"
-    str += "    add_thing(KIND_LEVER,58,10,DIR_L,DIR_C,0,0,250); //// FOR MUSIC!!!\n\n"
+    str += "    add_thing(KIND_LEVER,119,13,DIR_L,DIR_C,0,0,250); //// for music on/off!\n\n"
     var lbls = all_labels();
     str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(o=>dump_obj_to_c(o,lbls)).join("")
     str += "}\n\n"
