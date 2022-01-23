@@ -49,6 +49,10 @@ void sfx_death() {
     tone(666, 10|(90<<24)|(10<<8), 100, TONE_NOISE); 
 }
 
+void sfx_split() { tone(1000|(20<<16), 1|(4<<8)|(4<<24), 36, TONE_TRIANGLE); }
+void sfx_lever() { tone(20|(1000<<16), 1|(4<<8)|(4<<24), 36, TONE_TRIANGLE); }
+void sfx_move_robot() { tone(20|(36<<16), 6|(4<<8)|(4<<24), 36, TONE_PULSE1); }
+
 void sfx_win() { sfx_death(); } // TODO coś wymyśl
 
 uint8_t music_on = 1; /// :)
@@ -802,10 +806,16 @@ int8_t dy_for(uint8_t dir) {
 }
 
 int8_t flip_dir(uint8_t dir) {
-    if(dir==DIR_U) return DIR_D;
-    if(dir==DIR_D) return DIR_U;
+    switch(dir) {
+        case DIR_U: return DIR_D;
+        case DIR_D: return DIR_U;
+        case DIR_L: return DIR_R;
+        case DIR_R: return DIR_L;
+    }
     return dir;
 }
+
+
 
 enum { KIND_NOTHING,
        KIND_HERO,
@@ -814,10 +824,12 @@ enum { KIND_NOTHING,
        KIND_CORKSCREW,
        KIND_DOOR,KIND_DOOR_O, 
        KIND_MIRROR,KIND_OXYGEN,KIND_CRYSTAL,
-       KIND_ELECTRIC,KIND_SMOKE,KIND_FIRE,
+       KIND_ELECTRIC,
+       KIND_SMOKE,KIND_FIRE,
        KIND_TENTACLES,
        KIND_DETONATOR_0, KIND_DETONATOR_1, KIND_BOMB, KIND_LEVER,
        KIND_BIGBATON,
+       KIND_ELECTRIC_OFF, /// it's a fake kind y'know
        KINDS_COUNT };
 
 typedef struct {
@@ -828,7 +840,7 @@ typedef struct {
     uint8_t label;
 } thing_t;
 
-#define MAX_THINGS 1024 // ??
+#define MAX_THINGS 2048 // ??
 thing_t things[MAX_THINGS];
 uint16_t first_free=0,last_occupied=0;
 
@@ -848,32 +860,19 @@ uint16_t add_thing(uint8_t kind,
         if(first_free>last_occupied) last_occupied=first_free;
         while(first_free<MAX_THINGS &&
               things[first_free].kind!=KIND_NOTHING) first_free++;
-        //tracef("pszlo ADD (k=%d,x=%d,y=%d) => ni=%d,  ff=%d lo=%d", kind,x,y,ni,first_free,last_occupied);
         return ni;
     }
     trace("miejsca ni ma!");
     return MAX_THINGS+1; /// pfff.
 }
 
-/*
-void add_thing(thing_t the_thing) {
-    if(first_free<MAX_THINGS) {
-        things[first_free] = the_thing;
-        if(first_free>last_occupied) last_occupied=first_free;
-        while(first_free<MAX_THINGS &&
-              things[first_free].kind!=KIND_NOTHING) first_free++;
-    }
-}
-*/
-
 void remove_thing(uint16_t index) {
-    //tracef("rmthing i=%d (ff=%d,lo=%d)",index,first_free,last_occupied);
     things[index].kind = KIND_NOTHING;
     things[index].x = 0; things[index].y = 0;
     things[index].facing = DIR_C; things[index].move = DIR_C;
     things[index].counter = 0; things[index].max_counter = 0;
     things[index].label = 0;
-    if(index<first_free) first_free = index;
+    if(index>0 && index<first_free) first_free = index;
     while(last_occupied>0 && things[last_occupied].kind==KIND_NOTHING) last_occupied--;
 }
 
@@ -881,19 +880,21 @@ uint8_t sprite_for_maptile(uint8_t t, uint8_t x, uint8_t y, uint8_t subframe) {
     (void)(subframe); /// just to avoid "error: unused parameter" thing...    
     (void)(y);
     uint8_t blink=0;
-    if(t==S_EVIL_EYE_C) {
+    if(t==S_EVIL_EYE_C) { /// STOP WATCHING ME!
         if((clock+(x>>3)+(y>>3))%16==7) blink=1;
         if(x<CENTRE-8) return S_EVIL_EYE_R+blink;
         if(x>CENTRE+8) return S_EVIL_EYE_L+blink;
         return S_EVIL_EYE_C+blink;
     }
-    return t; /// will add some animations here TODO
+    return t;
 }
 
 uint8_t sprite_for_thing(thing_t *t, uint8_t subframe) {
     uint8_t s;
     switch(t->kind) {
-        case KIND_NOTHING: return S_FLOOR; /// not the best idea; not going to happen tho ;)
+        case KIND_NOTHING:
+        case KIND_ELECTRIC_OFF:
+            return S_FLOOR; /// not the best idea BUT it's not going to happen, right?!
 
         case KIND_BARELL: return S_BARELL;
         case KIND_OXYGEN: return S_OXYGEN;
@@ -917,8 +918,8 @@ uint8_t sprite_for_thing(thing_t *t, uint8_t subframe) {
 
         case KIND_ELECTRIC:
            switch(t->facing) {
-               case DIR_U: case DIR_D: return S_ELECTRIC_V1 + (subframe>=4);
-               default: return S_ELECTRIC_H1 + (subframe>=4);
+               case DIR_U: case DIR_D: return S_ELECTRIC_V1 + (((t->y)&1)^(subframe>=4));
+               default: return S_ELECTRIC_H1 + (((t->x)&1)^(subframe>=4));
            }
            break; // notreached, just-in-case
 
@@ -1285,6 +1286,8 @@ void initialize_world() {
 void dreamy_palette();
 void behind_the_mirror_palette();
 
+uint8_t can_move(uint16_t);
+
 void the_other_side() {
     uint16_t t;
     if(game_behind_mirror==1) {
@@ -1310,6 +1313,8 @@ uint8_t is_flamable(uint8_t kind) {
     switch(kind) {
     case KIND_BARELL:
     case KIND_DOOR:
+    case KIND_JOYSTICK:
+    case KIND_TENTACLES:
     case KIND_LEVER: 
     case KIND_GUN: return 1;
     default: break;
@@ -1319,6 +1324,7 @@ uint8_t is_flamable(uint8_t kind) {
 
 uint8_t is_explodable(uint8_t kind) {
     switch(kind) {   
+    case KIND_PARTICLE:
     case KIND_BOMB:     
     case KIND_OXYGEN:
     case KIND_GUN: return 1;
@@ -1336,191 +1342,277 @@ uint8_t explosion_radius_for(uint8_t kind) {
     return 0;
 }
 
-void explosion(thing_t *subject) {
+void explosion(uint16_t index) {
     uint16_t t;
     uint8_t radius = 0;
     int8_t i,j,x,y;
+    thing_t *subject;
+    subject = &things[index]; /// ya?
+    if(subject->kind==KIND_NOTHING) return;
     subject->move = DIR_C; subject->facing = DIR_C;
+    if(subject->kind==KIND_HERO) { //{ gameover(); return; } /// sorry...
+        subject->kind = KIND_FIRE;
+        subject->counter = 10; /// LOL
+    }
     if(is_flamable(subject->kind)) {
         subject->kind = KIND_FIRE;
         subject->counter = 51; subject->max_counter = 0; /// hmm?
     }
+
     if(is_explodable(subject->kind)) {
         radius = explosion_radius_for(subject->kind);
         subject->kind = KIND_EXPLOSION;
+        subject->facing = DIR_C; subject->move = DIR_C;
         subject->counter = 2; subject->max_counter = 0;
         for(t=0;t<=last_occupied;t++) {
             if(things[t].kind==KIND_NOTHING) continue;
             if(S1_distance(things[t].x,subject->x,MAP_W)<=radius &&
-               S1_distance(things[t].y,subject->y,MAP_H)<=radius) explosion(&things[t]);
+               S1_distance(things[t].y,subject->y,MAP_H)<=radius) explosion(t);
         }
         /// ok and just for the giggles:
-        if(visible_from(subject->x,subject->y,things[0].x,things[0].y)) sfx_boom();
+        if(visible_from(subject->x,subject->y,things[0].x,things[0].y) && radius>0)
+            sfx_boom();
         for(i=-radius;i<=radius;i++)
             for(j=-radius;j<=radius;j++) {
                 x = (subject->x+i)&(MAP_W-1);
                 y = (subject->y+j)&(MAP_H-1);
                 if(read_map_at(x,y,game_behind_mirror)==S_FLOOR) {
-                    t = add_thing(KIND_EXPLOSION,x,y,DIR_C,DIR_C,3,0,0);
+                    add_thing(KIND_EXPLOSION,x,y,DIR_C,DIR_C,3,0,0);
                 }
             }
     }
 }
 
-/// ok this is pretty specific but for now...
+/// ok these are pretty specific, but they work, right?
 void explode_all_bombs_with_label(uint8_t label) {
     uint16_t t;
     for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind!=KIND_BOMB) continue;
-        if(things[t].label==label) explosion(&things[t]);
+        if(things[t].kind!=KIND_BOMB || things[t].label!=label) continue;
+        explosion(t);
     }
 }
+
+void remove_all_tentacles_with_label(uint8_t label) {
+    uint16_t t;
+    for(t=0;t<=last_occupied;t++) {
+        if(things[t].kind!=KIND_TENTACLES || things[t].label!=label) continue;
+        remove_thing(t);
+        /// TODO: some sfx??
+    }
+}
+
+void move_all_robots_with_label(uint8_t label, uint8_t dir) {
+    uint16_t t;
+    for(t=0;t<=last_occupied;t++) {
+        if(things[t].kind!=KIND_ROBOT || things[t].label!=label) continue;
+        things[t].move = dir; things[t].facing = dir;
+        //tracef("robie move all robots wiesz, t=%d",t);
+        if(!can_move(t)) things[t].move = DIR_C;
+        /// TODO: some sfx??
+    }
+}
+
+void toggle_all_electrics_with_label(uint8_t label) {
+    uint16_t t;
+    for(t=0;t<=last_occupied;t++) {
+        if((things[t].kind!=KIND_ELECTRIC && things[t].kind!=KIND_ELECTRIC_OFF)
+           || things[t].label!=label) continue;
+        if(things[t].kind==KIND_ELECTRIC) things[t].kind=KIND_ELECTRIC_OFF;
+        else  things[t].kind=KIND_ELECTRIC;
+        /// TODO: some sfx!!
+    }
+}
+
+//////// crazy smoke stuff... /////////////////////////////////////////////////
 
 /// this might not work very well...
 uint8_t is_free(uint8_t x, uint8_t y) {
     uint16_t t;
     if(read_map_at(x,y,game_behind_mirror)!=S_FLOOR) return 0; /// XD
     for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind==KIND_NOTHING) continue;
+        if(things[t].kind==KIND_NOTHING || things[t].kind==KIND_ELECTRIC_OFF) continue;
         if(things[t].x==x && things[t].y==y) return 0;
     }
     return 1;
 }
 
-void spawn_smoke(uint8_t x, uint8_t y) {
-    (void)(x);
-    (void)(y);
-    /*
-    thing_t smoke;
-    smoke.kind = KIND_SMOKE; smoke.counter=2+(clock%8);
-    smoke.x = x; smoke.y = (y-1)&(MAP_H-1);
-
-    if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
-    if((clock&1)==0) {
-        smoke.x = (x-1)&(MAP_W-1); smoke.y = y;
-        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
-        smoke.x = (x+1)&(MAP_W-1); smoke.y = y;
-        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
-    } else {
-        smoke.x = (x+1)&(MAP_W-1); smoke.y = y;
-        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
-        smoke.x = (x-1)&(MAP_W-1); smoke.y = y;
-        if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
+void spawn_smoke(uint8_t x, uint8_t y,uint8_t cntr) {
+    uint8_t d = (clock+x+y)%4;
+    uint8_t x0 = (x+dx_for(d))&(MAP_W-1);
+    uint8_t y0 = (y+dy_for(d))&(MAP_H-1);
+    if(!is_free(x0,y0)) {
+        d=flip_dir(d);
+        x0 = (x+dx_for(d))&(MAP_W-1);
+        y0 = (y+dy_for(d))&(MAP_H-1);
+        if(!is_free(x0,y0)) return;
     }
-    smoke.x = x; smoke.y = (y-1)&(MAP_H-1);
-    if(is_free(smoke.x,smoke.y)) { add_thing(smoke); return; }
-    */
-    //// TODO TODO ;)
+    if(cntr%5==3) cntr--; /// XD
+    add_thing(KIND_SMOKE,x0,y0,DIR_C,DIR_C,cntr,0,0);
 }
 
-int can_move(uint16_t index) {
+void split_particle(uint16_t crystal,uint16_t particle) {
+    uint8_t d1,d2;
+    uint16_t p1,p2;
+    switch(things[particle].move) {
+        case DIR_L:
+        case DIR_R: d1=DIR_U; d2=DIR_D; break;
+        case DIR_U:
+        case DIR_D: d1=DIR_L; d2=DIR_R; break;
+        default: return; /// should not happen...
+    }
+    remove_thing(particle);
+    p1 = add_thing(KIND_PARTICLE,things[crystal].x,things[crystal].y,d1,d1,150,0,0);
+    p2 = add_thing(KIND_PARTICLE,things[crystal].x,things[crystal].y,d2,d2,150,0,0);
+    //if(!can_move(p1)) remove_thing(p1); //explosion(p1); /// sure?!
+    //if(!can_move(p2)) remove_thing(p2); //explosion(p2); /// sure?!
+}
+
+/// the brilliant collisions table! cf collisions.csv, tools/mk-collisions.rb,
+/// and can_move() below.
+enum { EVENT_BLOCK, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_MOVE_ROBOT, EVENT_KILL_TENTACLES,
+       EVENT_OPEN, EVENT_REMOVE_C, EVENT_DETONATE, EVENT_TOGGLE, EVENT_WIN, EVENT_EXPLODE_C,
+       EVENT_SKIP, EVENT_FLIP_M, EVENT_SPLIT, EVENT_FLIP_C,
+       EVENTS_COUNT };
+
+const uint8_t col_index[22] = {
+    0, 1, 2, 8, 8, 3, 8, 8, 8, 8, 4, 5, 6, 8, 8, 8, 8, 8, 8, 7, 8, 8
+}; /// wicked space saver (most kinds don't move). 8th one is a guard.
+
+const uint8_t collisions[9][22] = {
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_KILL_TENTACLES, EVENT_OPEN, EVENT_BLOCK, EVENT_PUSH, EVENT_PUSH, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_REMOVE_C, EVENT_EXPLODE_M, EVENT_EXPLODE_M, EVENT_DETONATE, EVENT_BLOCK, EVENT_PUSH, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_SKIP, EVENT_SKIP, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_EXPLODE_M, EVENT_REMOVE_C, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_DETONATE, EVENT_BLOCK, EVENT_BLOCK, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_SKIP, EVENT_SKIP, EVENT_EXPLODE_C, EVENT_BLOCK, EVENT_EXPLODE_C, EVENT_BLOCK, EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_FLIP_M, EVENT_EXPLODE_C, EVENT_SPLIT, EVENT_SKIP, EVENT_SKIP, EVENT_SKIP, EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_EXPLODE_C, EVENT_BLOCK },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_REMOVE_C, EVENT_SKIP, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_PUSH, EVENT_PUSH, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_EXPLODE_C, EVENT_EXPLODE_M, EVENT_EXPLODE_C, EVENT_DETONATE, EVENT_BLOCK, EVENT_PUSH, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_FLIP_C, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_PUSH, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_REMOVE_C, EVENT_REMOVE_C, EVENT_BLOCK, EVENT_DETONATE, EVENT_BLOCK, EVENT_PUSH, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_EXPLODE_M, EVENT_REMOVE_C, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_DETONATE, EVENT_BLOCK, EVENT_BLOCK, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_SPLIT, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_REMOVE_C, EVENT_REMOVE_C, EVENT_EXPLODE_C, EVENT_DETONATE, EVENT_BLOCK, EVENT_PUSH, EVENT_TOGGLE, EVENT_WIN },
+  { EVENT_BLOCK, EVENT_PUSH, EVENT_EXPLODE_M, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_BLOCK, EVENT_MOVE_ROBOT, EVENT_BLOCK, EVENT_OPEN, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_EXPLODE_M, EVENT_REMOVE_C, EVENT_EXPLODE_M, EVENT_BLOCK, EVENT_DETONATE, EVENT_BLOCK, EVENT_BLOCK, EVENT_TOGGLE, EVENT_WIN },
+ /// and an extra row for default, just-in-case...
+  { EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK, EVENT_BLOCK }
+};
+
+uint8_t can_move(uint16_t index) {
     uint16_t t;
     uint8_t nx,ny;
     thing_t *mover,*collider;
     mover = &things[index]; // XD
-
     if(mover->kind==KIND_NOTHING || mover->move==DIR_C) return 0;
 
     nx = (mover->x+dx_for(mover->move)) & (MAP_W-1);
     ny = (mover->y+dy_for(mover->move)) & (MAP_H-1);
+
     /// collision with map?
-    if(read_map_at(nx,ny,game_behind_mirror)!=S_FLOOR) return 0; /// XD
+    if(read_map_at(nx,ny,game_behind_mirror)!=S_FLOOR) return 0;
+
     /// then maybe with other object?
     for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind==KIND_NOTHING) continue;
-        if(things[t].x==nx && things[t].y==ny) {
-            collider = &things[t];
-            /// na szybkości TMP
-            if(mover->kind==KIND_HERO && collider->kind==KIND_DOOR) {
-                //remove_thing(t); /// the collider
-                collider->kind=KIND_DOOR_O;
-                collider->counter=2;
+        if(things[t].kind==KIND_NOTHING || things[t].kind==KIND_ELECTRIC_OFF) continue;
+        if(things[t].x!=nx || things[t].y!=ny) continue;
+        collider = &things[t];
+        //// super-special pre-actions...
+        if(mover->kind==KIND_HERO && collider->kind==KIND_OXYGEN) {
+            oxygen_level += 80; if(oxygen_level>1600) oxygen_level = 1600;
+        }
+        if(mover->kind==KIND_HERO && collider->kind==KIND_CRYSTAL) {
+            if(oxygen_level>160) oxygen_level -= 160; else oxygen_level = 0;
+        }
+        if(mover->kind==KIND_HERO && collider->kind==KIND_MIRROR) {
+            if(mover->move==DIR_U || mover->move==DIR_D) {
+                the_other_side(); /// :D
+                return 1;
+            }
+        }
+        /// ...and the usual stuff:
+        switch(collisions[col_index[mover->kind-1]][collider->kind-1]) {
+            case EVENT_BLOCK: return 0;
+            case EVENT_SKIP: break; //// [because there _might_ be something else too!]
+            case EVENT_REMOVE_C: remove_thing(t); mover->x = nx; mover->y = ny; return 1;
+
+            case EVENT_EXPLODE_M: explosion(index); return 0;
+            case EVENT_EXPLODE_C: explosion(t); return 0;
+
+            case EVENT_OPEN:
+                collider->kind=KIND_DOOR_O; collider->counter=2;
                 sfx_open(); // XD
                 return 0;
-            }
-            if(mover->kind==KIND_HERO && collider->kind==KIND_MIRROR) {
-                if(mover->move==DIR_U || mover->move==DIR_D) {
-                    the_other_side(); /// :o
-                    return 1;
-                }
-            }
-            if(mover->kind==KIND_HERO && collider->kind==KIND_BIGBATON) {
-                victoly(); /// !!
-            }
-            if(mover->kind==KIND_PARTICLE) {
-                switch(collider->kind) {
-                case KIND_NOTHING:
-                case KIND_FIRE:
-                case KIND_SMOKE:
-                case KIND_PARTICLE:
+
+            case EVENT_FLIP_M:
+                mover->facing = flip_dir(mover->facing);
+                mover->move = flip_dir(mover->move);
+                if(visible_from(mover->x,mover->y,things[0].x,things[0].y))
+                    sfx_split();
+                return 0; /// sure?                
+            case EVENT_FLIP_C:
+                collider->facing = flip_dir(collider->facing);
+                collider->move = flip_dir(collider->move);
+                if(visible_from(mover->x,mover->y,things[0].x,things[0].y))
+                    sfx_split();
+                return 0; /// sure?
+            case EVENT_SPLIT:
+                if(visible_from(mover->x,mover->y,things[0].x,things[0].y))
+                    sfx_split();
+                if(collider->kind==KIND_PARTICLE) split_particle(index,t);
+                else split_particle(t,index);
+                return 0;
+
+            case EVENT_PUSH:
+                collider->move = mover->move;
+                if(can_move(t)) {
                     mover->x = nx; mover->y = ny;
+                    ///if(visible_from(mover->x,mover->y,things[0].x,things[0].y)) sfx_push();
+                    sfx_push();
+                    if(mover->kind==KIND_HERO && collider->kind!=KIND_OXYGEN) {
+                        if(oxygen_level>8) oxygen_level -= 8; else oxygen_level = 0;
+                    }                        
                     return 1;
-                case KIND_CRYSTAL:
-                    // TODO: spawn 2 particles
-                    return 0;
-                default:
-                    if(is_explodable(collider->kind) || is_flamable(collider->kind))
-                        explosion(collider);
-                    return 0;
-                }
-            }
-
-            switch(collider->kind) {
-                case KIND_NOTHING:
-                    mover->x = nx; mover->y = ny;
-                    return 1;
-
-                case KIND_DETONATOR_0:
-                    collider->kind = KIND_DETONATOR_1;
-                    explode_all_bombs_with_label(collider->label); /// XD
-                    return 0;
-
-                case KIND_OXYGEN:
-                    if(mover->kind==KIND_HERO) {
-                        oxygen_level += 16;
-                        if(oxygen_level > 1600) oxygen_level=1600;
-                    }
-                case KIND_BARELL: /// TODO: other pushables...
-                case KIND_BOMB:
-                case KIND_MIRROR: /// with the exception of frontal passing it's pushable
-                    if(mover->kind==KIND_PARTICLE) {
-                        explosion(collider); explosion(mover);
-                        return 0;
-                    } //// lol
-                    collider->move = mover->move;
-                    if(can_move(t)) {
-                        mover->x = nx; mover->y = ny;
-                        if(visible_from(mover->x,mover->y,things[0].x,things[0].y))
-                            sfx_push();
-                        return 1;
-                    }
+                } else {
                     collider->move=DIR_C;
                     return 0;
+                }
+                break; /// notreached
 
-                //// TODO :)
+            case EVENT_MOVE_ROBOT:
+                sfx_move_robot();
+                move_all_robots_with_label(collider->label, mover->move);
+                return 0;
+            case EVENT_KILL_TENTACLES:
+                sfx_lever();
+                collider->facing = flip_dir(collider->facing);
+                remove_all_tentacles_with_label(collider->label);
+                return 0;
+            case EVENT_DETONATE:
+                collider->kind = KIND_DETONATOR_1;
+                explode_all_bombs_with_label(collider->label);
+                return 0;
+            case EVENT_TOGGLE:
+                sfx_lever();
+                collider->facing = flip_dir(collider->facing);
+                toggle_all_electrics_with_label(collider->label);
+                return 0;
+            case EVENT_WIN:
+                sfx_lever();
+                victoly();
+                return 0;
+        }
+    }
+    /// all good...
+    mover->x = nx; mover->y = ny;
+    return 1;
+}
 
-                default: return 0;
-            }
-         } 
-     } 
-     /// boom just move'em. 
-     mover->x = nx; 
-     mover->y = ny; 
-     return 1; 
- } 
 
 
 void update_world() {
     uint16_t t,t2;
-
-    /// cleanup after previous step (animation info and stuff?)
+    /// wait, do we have any oxygen left? are we there at all?
+    if(oxygen_level==0 ||
+       (things[0].kind!=KIND_HERO && things[0].kind!=KIND_FIRE)) { gameover(); return; }
+    /// reset stuff after previous round...
+    for(t=0;t<=last_occupied;t++)
+    if(things[t].kind!=KIND_NOTHING) things[t].move=DIR_C;
+    /// ...and figure out what's new!
     for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind==KIND_NOTHING) continue;
-        things[t].move = DIR_C;
-    }
-    /// and the new stuff (moves, collisions, whatever)
-    for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind==KIND_NOTHING) continue;
+        if(things[t].kind==KIND_NOTHING || things[t].kind==KIND_ELECTRIC_OFF) continue;
         switch(things[t].kind) {
             case KIND_HERO:
                 things[t].move = joystick;
@@ -1532,14 +1624,22 @@ void update_world() {
                 }
                 if(!can_move(t)) things[t].move = DIR_C;
                 break;
-            case KIND_PARTICLE: /////// WTF?
-                things[t].move = things[t].facing;
-                if(!can_move(t)) {
-                    things[t].kind = KIND_EXPLOSION; /// TODO: ESKTRAKCJA EKSPLOZJI WIESZ?!
-                    things[t].facing = DIR_C; things[t].move = DIR_C;
-                    things[t].counter = 2; things[t].max_counter = 0;
-                }
-                if(--(things[t].counter)==0) remove_thing(t); // in case they leak? TODO
+            case KIND_PARTICLE:
+                things[t].move = things[t].facing; /// todo: no longer necessary, no?
+                if(!can_move(t) && things[t].kind==KIND_PARTICLE) explosion(t);
+                else if(--(things[t].counter)==0) remove_thing(t);
+                break;
+            case KIND_ROBOT: // :)
+                break;
+            case KIND_FIRE:
+                if(--(things[t].counter)==0) remove_thing(t);
+                else if(things[t].counter%10)
+                    spawn_smoke(things[t].x,things[t].y,9);
+                break;
+            case KIND_SMOKE:
+                if(--(things[t].counter)==0) remove_thing(t);
+                else if(things[t].counter%5==3)
+                    spawn_smoke(things[t].x,things[t].y,things[t].counter+(clock%3));
                 break;
             case KIND_EXPLOSION:
             case KIND_DOOR_O: /// XD
@@ -1551,31 +1651,15 @@ void update_world() {
                     t2 = add_thing(KIND_PARTICLE,
                                    things[t].x,things[t].y,
                                    things[t].facing,things[t].facing,
-                                   230,0,0);                    
-                    can_move(t2); /// yup.
+                                   200,0,0);
+                    //can_move(t2); /// nope
                 }
-                /// guns don't move.
                 break;
-            case KIND_FIRE:
-                if(--(things[t].counter)<1) remove_thing(t);
-                else if(things[t].counter%10) spawn_smoke(things[t].x,things[t].y);
-                break;
-            case KIND_SMOKE:
-                if(--(things[t].counter)<1) remove_thing(t);
-                else if(things[t].counter%4==3) spawn_smoke(things[t].x,things[t].y);
-                break;
-            case KIND_BARELL:
-            case KIND_OXYGEN:
-            case KIND_BOMB:
-            case KIND_MIRROR:
-                break; /// skip the can_move thing, it's managed by the mover.
-            /// TODO.
-            default:
-                if(!can_move(t)) things[t].move = DIR_C;
-                break;
+            default: break;
         }
     }
 }
+
 
 
 //// DISPLAY AND STUFF ////////////////////////////////////////////////////////////
@@ -1611,7 +1695,7 @@ void display(uint8_t subframe) {
         }
     /// and animate objects
     for(t=0;t<=last_occupied;t++) {
-        if(things[t].kind==KIND_NOTHING) continue;
+        if(things[t].kind==KIND_NOTHING || things[t].kind==KIND_ELECTRIC_OFF) continue;
         a_thing = &things[t];
         if(visible_from(actor->x,actor->y,a_thing->x,a_thing->y)) {
             spr = sprite_for_thing(a_thing, subframe);
@@ -1686,11 +1770,21 @@ uint8_t tune_pc = 0;
 //// GAME STATES AND STUFF ////////////////////////////////////////////////////////
 
 void gameover() {
-    uint16_t t;
+    uint16_t t;    
     gamestate = OVER;
-    subframe = 0; clock = 0;
+    subframe = 7; clock = 0;
     for(t=0;t<MAX_THINGS;t++) remove_thing(t); // just in case...
     sfx_death();
+}
+
+void new_game() {
+    gamestate=GAME;
+    initialize_world();
+    oxygen_level = 16*99; /// best place for this XD
+    game_behind_mirror = 0;
+    clock = 0;
+    subframe = 7; // :D
+    reset_joystick();
 }
 
 void victoly() {
@@ -1837,7 +1931,7 @@ void victoly_frame() {
     /// and rotating cosmonaut because yolo
     t.kind = KIND_HERO; t.facing=tune_pc%4;
     display_sprite(sprite_for_thing(&t, subframe),CENTRE,CENTRE);
-    /// and info    
+    /// and info:
     *DRAW_COLORS = 2;
     text("     VICTOLY", 12, 59);
     if(clock>MIN_TIME) text("      press X",8,142);
@@ -1866,8 +1960,7 @@ void start() {
     tune_pc = 0;
 }
 
-void update () {
-    
+void update () {    
     switch(gamestate) {
         case TITLE:
             dreamy_palette();
@@ -1880,15 +1973,7 @@ void update () {
 
         case BRIEFING:
             briefing_frame();
-            if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) {
-                gamestate=GAME;
-                initialize_world();
-                oxygen_level = 16*99; /// best place for this XD
-                game_behind_mirror = 0;
-                clock = 0;
-                subframe = 7; // :D
-                reset_joystick();
-            }
+            if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) new_game();
             break;
             
         case GAME:
@@ -1905,16 +1990,13 @@ void update () {
             
         case OVER:
             gameover_frame();
-            if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) {
-                gamestate=TITLE;
-                clock = 0;
-            }
+            if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) new_game();            
             break;
             
         case VICTOLY:
             victoly_frame();
             if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) {
-                gamestate = TITLE;
+                gamestate = TITLE; //// hmmm?!
                 clock = 0;
             }
             break;
