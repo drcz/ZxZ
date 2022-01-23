@@ -120,8 +120,8 @@ let OBJECTS = {
 'S_TENTACLES_L': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE,PALETTE),
 'S_TENTACLES_R': mk_sprite('RS_TENTACLES1',BLIT_2BPP|BLIT_ROTATE|BLIT_FLIP_Y,PALETTE),
 'S_BIGBATON':mk_sprite('RS_BIGBATON',BLIT_2BPP,PALETTE),
-/*
 'S_CORKSCREW':mk_sprite('RS_CORKSCREW',BLIT_2BPP,PALETTE),
+/*
 'S_WATER1': mk_sprite('RS_WATER1', BLIT_2BPP,PALETTE),
 'S_WATER2': mk_sprite('RS_WATER1', BLIT_2BPP|BLIT_FLIP_X,PALETTE),
 */
@@ -158,7 +158,7 @@ let dump_js = () => {
     str += the_map.map(r => "["+r.map(e=>'"'+e+'"').join(",")+"]").join(",\n"); // !
     str += "];\n\n"
     str += "var the_objs = [\n"
-    str += the_objs.map(o=>"['"+o[0]+"',"+o[1]+","+o[2]+","+o[3]+"]").join(",\n")
+    str += the_objs.map(o=>"['"+o[0]+"',"+o[1]+","+o[2]+","+o[3]+",\""+(o.length>4?o[4]:"")+"\"]").join(",\n")
     str += "];\n"
     return str
 }
@@ -225,62 +225,25 @@ let find_actor_or_zero = () => {
     return [ax,ay]
 };
 
-/*
-let dump_obj_to_c = o => {
-    var [sprite,x,y,ind] = o;
-    var [kind,dir] = obj_sprite2kindir[sprite];
-    str  = "    //// object #"+ind+"\n"
-    str += "    t = fresh_thing();\n"
-    str += "    t.kind = "+kind+";\n"
-    str += "    t.x = "+x+"; t.y = "+y+";\n"
-    //str += "    t.facing = "+dir+"; t.move = DIR_C;\n"
-    str += "    t.facing = "+dir+";\n"
-    if(kind=="KIND_GUN") {
-        cntr = (y%5)+1;
-        str += "    t.counter = "+cntr+"; t.max_counter = 5;\n"
-    }
-    str += "    add_thing(t);\n"
-    return str
-}
 
-
-let dump_c = () => {
-    var [ax,ay] = find_actor_or_zero(true)
-    str = "uint8_t the_map[MAP_H][MAP_W] = {\n"
-    str += the_map.map(r => "{"+r.join(",")+"}").join(",\n"); // :D
-    str += "};\n\n"
-    str += "//////////////////////////////////////////////////\n\n"
-    str += "void initialize_world() {\n"
-    str += "    uint8_t x,y;\n"
-    str += "    thing_t t;\n"
-    str += "    uint16_t i;\n"
-    str += "    first_free=0;\n"
-    str += "    last_occupied=0;\n"
-    str += "    t.kind = KIND_HERO;\n"
-    str += "    t.x = "+ax+"; t.y = "+ay+";\n"
-    str += "    t.facing = DIR_D; t.move = DIR_C;\n"
-    str += "    t.counter = 0; t.max_counter = 0;\n"
-    str += "    add_thing(t);\n"
-    str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(dump_obj_to_c).join("\n")
-    str += "}\n\n"
-    return str
-}
-*/
-//// novum!
-let dump_obj_to_c = o => {
+let dump_obj_to_c = (o,lbls) => {
     var [sprite,x,y,ind] = o;
+    var lbl = 0; if(o.length>4) lbl=lbls.indexOf(o[4])+1; //XD
     var [kind,dir] = obj_sprite2kindir[sprite];
     var [cnt,mcnt] = [0,0];
     if(kind=="KIND_GUN") { cnt = (y%5)+1; mcnt = 5; }
-    str  = "    //// object #"+ind+"\n"
-    str += "    add_thing("+kind+","+x+","+y+","+dir+",DIR_C,"+cnt+","+mcnt+",0);\n"
+    str = "    add_thing("+kind+","+x+","+y+","+dir+",DIR_C,"+cnt+","+mcnt+","+lbl+"); //// object #"+ind+"\n"
     return str
 }
 
+let all_labels = () => {
+  var uniq = (val,ind,self) => self.indexOf(val)===ind;
+  return the_objs.filter(o=>o.length>4&&o[4]!="").map(o=>o[4]).filter(uniq)
+};
 
 let dump_c = () => {
-    var [ax,ay] = find_actor_or_zero(true)
-    str = "uint8_t the_map[MAP_H][MAP_W] = {\n"
+    var [ax,ay] = find_actor_or_zero(true);
+    str = "const uint8_t the_map[MAP_H][MAP_W] = {\n"
     str += the_map.map(r => "{"+r.join(",")+"}").join(",\n"); // :D
     str += "};\n\n"
     str += "//////////////////////////////////////////////////\n\n"
@@ -290,8 +253,10 @@ let dump_c = () => {
     str += "    for(i=0;i<MAX_THINGS;i++) remove_thing(i); /// just in case...\n"
     str += "    first_free=0;\n"
     str += "    last_occupied=0;\n\n"
-    str += "    add_thing(KIND_HERO,"+ax+","+ay+",DIR_D,DIR_C,0,0,0);\n\n"
-    str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(dump_obj_to_c).join("")
+    str += "    add_thing(KIND_HERO,"+ax+","+ay+",DIR_D,DIR_C,0,0,0);\n"
+    str += "    add_thing(KIND_LEVER,58,10,DIR_L,DIR_C,0,0,250); //// FOR MUSIC!!!\n\n"
+    var lbls = all_labels();
+    str += the_objs.filter(o=>o[0]!="S_ACTOR_D").map(o=>dump_obj_to_c(o,lbls)).join("")
     str += "}\n\n"
     return str
 }
@@ -393,11 +358,15 @@ kanwa.onmousemove = e => {
     var posY = e.offsetY;
     [MX,MY]=[~~((posX-CENTRE_X-(4*PIXEL_W))/(8*PIXEL_W)),~~((posY-CENTRE_Y-(4*PIXEL_H))/(8*PIXEL_H))];
     MX+=CX ; MY+=CY; MX&=(MAP_W-1); MY&=(MAP_H-1);
-    document.getElementById('info').innerHTML = '('+MX+','+MY+') cur.ad.'+cur_adding; /// todo: dopisywać co się tera dodaje??
+    osss = ""
+    var os = the_objs.filter(o=>(o[1]==MX && o[2]==MY));
+    for(var oi=0;oi<os.length;oi++) { var o=os[oi]; osss+="{"+o[0]+", lbl:"+(o.length>4?o[4]:"--")+"} ; "; }
+    
+    document.getElementById('info').innerHTML = '('+MX+','+MY+')='+the_map[MY][MX]+' ::: '+osss+' ::: cur.ad.'+cur_adding;
 };
 
 let brush_up_objs = () => {    
-    the_objs = the_objs.filter(o=>o[0]!=":removeme:").map((o,i)=>[o[0],o[1],o[2],i])
+    the_objs = the_objs.filter(o=>o[0]!=":removeme:").map((o,i)=>[o[0],o[1],o[2],i,o.length>4?o[4]:""])
 }
 
 kanwa.onmousedown = e => {
@@ -413,7 +382,10 @@ kanwa.onmousedown = e => {
                 the_objs = the_objs.map(o=>(o[0]==cur_object?[":removeme:",o[1],o[2],o[3]]:o))
                 brush_up_objs()
             }
-            the_objs.push([cur_object,MX,MY,the_objs.length]) // :D
+            /// oh, and label!
+            var cur_lbl = document.getElementById("label").value;
+            console.log(cur_lbl);
+            the_objs.push([cur_object,MX,MY,the_objs.length,cur_lbl]) // :D
         }
     } /// tertium non datur
     draw_map(CX,CY)
