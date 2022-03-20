@@ -825,6 +825,14 @@ int8_t flip_dir(uint8_t dir) {
     return dir;
 }
 
+int8_t flip_v_dir(uint8_t dir) {
+    switch(dir) {
+        case DIR_U: return DIR_D;
+        case DIR_D: return DIR_U;
+    }
+    return dir;
+}
+
 
 
 enum { KIND_NOTHING,
@@ -1214,8 +1222,8 @@ void the_other_side() {
         things[t].y = (MAP_H-1) - things[t].y;
         occupied[things[t].y][things[t].x]++; // ! :D
         if(things[t].kind != KIND_HERO) {
-            things[t].facing = flip_dir(things[t].facing);
-            things[t].move = flip_dir(things[t].move);
+            things[t].facing = flip_v_dir(things[t].facing);
+            things[t].move = flip_v_dir(things[t].move);
         } /// the hero doesn't flip as it's her mirror-passing
     }
 }
@@ -1628,8 +1636,8 @@ void display(uint8_t subframe) {
 
     *DRAW_COLORS = 0x4320;
     //// draw the map
-    x_offset = CENTRE + (8-subframe)*dx_for(actor->move);
-    y_offset = CENTRE + (8-subframe)*dy_for(actor->move);
+    x_offset = CENTRE + (7-subframe)*dx_for(actor->move);
+    y_offset = CENTRE + (7-subframe)*dy_for(actor->move);
     for(j=-VIEW_RADIUS_H;j<=VIEW_RADIUS_H;j++)
         for(i=-VIEW_RADIUS_W;i<=VIEW_RADIUS_W;i++) {
             x = x_offset + i*8;
@@ -1647,9 +1655,9 @@ void display(uint8_t subframe) {
         if(visible_from(actor->x,actor->y,a_thing->x,a_thing->y)) {
             spr = sprite_for_thing(a_thing, subframe);
             x = x_offset + S1_difference(a_thing->x,actor->x,MAP_W)*8
-                - (8-subframe)*dx_for(a_thing->move);
+                - (7-subframe)*dx_for(a_thing->move);
             y = y_offset + S1_difference(a_thing->y,actor->y,MAP_H)*8
-                - (8-subframe)*dy_for(a_thing->move);
+                - (7-subframe)*dy_for(a_thing->move);
             display_sprite(spr,x,y);
         }
     }
@@ -1725,7 +1733,7 @@ uint8_t tune_pc = 0;
 void gameover() {
     uint16_t t;    
     gamestate = OVER;
-    subframe = 7; clock = 0;
+    clock = 0;
     for(t=0;t<MAX_THINGS;t++) remove_thing(t); // just in case...
     sfx_death();
 }
@@ -1812,7 +1820,7 @@ void briefing_frame() {
     text("Button in front of",9,106);
     text("a row of Evil Eyes,",5,114);
     text("pressing it should",9,122);
-    text("blow the damn Tous",9,130);
+    text("blow the damn Torus",5,130);
     text(" up... Good luck!",9,138);
 
     if(clock>MIN_TIME) text("    press X...",7,150);
@@ -1829,7 +1837,7 @@ void briefing_frame() {
     text("Button in front of",8,105);
     text("a row of Evil Eyes,",4,113);
     text("pressing it should",8,121);
-    text("blow the damn Tous",8,129);
+    text("blow the damn Torus",4,129);
     text(" up... Good luck!",8,137);
 
     *DRAW_COLORS = 3+((tune_pc>>1)&1);
@@ -1990,7 +1998,7 @@ void update () {
             title_frame();
             if (clock>MIN_TIME && (*GAMEPAD1 & (BUTTON_1|BUTTON_2))) {
                 gamestate=BRIEFING;
-                clock = 0; subframe = 0;
+                clock = 0;
             }
             break;
 
@@ -2007,7 +2015,7 @@ void update () {
                 tone(tune[tune_pc]*2, 20, 30, TONE_PULSE2);
                 tune_pc++; tune_pc%=LEN;
             }
-            if(subframe==7) reset_joystick(); /// sometimes it's better this way... or 6?
+            if(subframe==7) reset_joystick(); /// sometimes it's better this way...
             display(subframe);
             break;
             
@@ -2020,7 +2028,7 @@ void update () {
             victoly_frame();
             break;
     }    
-    subframe++; subframe%=9;
+    subframe++; subframe%=8;
     if(subframe==0) clock++;
 }
 
